@@ -1,0 +1,30 @@
+version: '3.1'
+
+volumes:
+  pg_data:
+
+services:
+#  app:
+#    image: task-manager-back:0.0.1
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    ports:
+#      - "8189:8189"
+#    depends_on:
+#      - app-db
+#    environment:
+#      - SERVER_PORT=8189
+#      - SPRING_DATASOURCE_URL=jdbc:postgresql://app-db/task_manager
+
+  app-db:
+    image: postgres:latest
+    restart: always
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_DB=bank_rest
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5433:5432"

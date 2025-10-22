@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: bank_rest
+  datasource:
+    url: jdbc:postgresql://localhost:5433/bank_rest
+    driver-class-name: org.postgresql.Driver
+    username: user
+    password: pass
+  liquibase:
+    change-log: db/changelog/db.changelog-master.yml
+server:
+  port: 8198
