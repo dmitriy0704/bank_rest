@@ -4,7 +4,7 @@ databaseChangeLog:
       author: dmitriy
       changes:
         - createTable:
-            tableName: user
+            tableName: users
             columns:
               - column:
                   name: id
@@ -36,13 +36,18 @@ databaseChangeLog:
                   defaultValueComputed: CURRENT_TIMESTAMP
                   constraints:
                     nullable: false
+              - column:
+                  name: role
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
 
   - changeSet:
       id: 2-create-card-table
       author: dmitriy
       changes:
         - createTable:
-            tableName: card
+            tableName: cards
             columns:
               - column:
                   name: id
@@ -78,10 +83,10 @@ databaseChangeLog:
                   constraints:
                     nullable: false
         - addForeignKeyConstraint:
-            baseTableName: card
+            baseTableName: cards
             baseColumnNames: user_id
-            referencedTableName: user
+            referencedTableName: users
             referencedColumnNames: id
-            constraintName: fk_card_user
+            constraintName: fk_cards_users
             onDelete: CASCADE
             onUpdate: RESTRICT

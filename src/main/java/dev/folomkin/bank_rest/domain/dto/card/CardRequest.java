@@ -1,4 +1,4 @@
-package dev.folomkin.bank_rest.domain.dto;
+package dev.folomkin.bank_rest.domain.dto.card;
 
 import java.math.BigDecimal;
 import java.util.Date;

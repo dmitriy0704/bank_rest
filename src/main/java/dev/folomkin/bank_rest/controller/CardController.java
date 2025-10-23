@@ -1,7 +1,7 @@
 package dev.folomkin.bank_rest.controller;
 
-import dev.folomkin.bank_rest.domain.dto.CardRequest;
-import dev.folomkin.bank_rest.domain.dto.CardResponse;
+import dev.folomkin.bank_rest.domain.dto.card.CardRequest;
+import dev.folomkin.bank_rest.domain.dto.card.CardResponse;
 import dev.folomkin.bank_rest.domain.model.User;
 import dev.folomkin.bank_rest.service.card.CardService;
 import lombok.AllArgsConstructor;
