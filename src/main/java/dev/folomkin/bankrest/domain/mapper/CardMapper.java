@@ -1,6 +1,6 @@
 package dev.folomkin.bankrest.domain.mapper;
 
-import dev.folomkin.bankrest.domain.dto.card.CardCreateResponse;
+import dev.folomkin.bankrest.domain.dto.card.CardResponse;
 import dev.folomkin.bankrest.domain.dto.user.UserResponse;
 import dev.folomkin.bankrest.domain.model.Card;
 import org.springframework.stereotype.Component;
@@ -9,7 +9,7 @@ import java.util.List;
 
 @Component
 public class CardMapper {
-    public CardCreateResponse toCardResponse(Card card) {
+    public CardResponse toCardResponse(Card card) {
         if (card == null) return null;
 
         UserResponse userResponse = null;
@@ -21,7 +21,7 @@ public class CardMapper {
             );
         }
 
-        return new CardCreateResponse(
+        return new CardResponse(
                 card.getId(),
                 card.getEncryptedNumber(),
                 card.getExpirationDate(),
@@ -30,7 +30,7 @@ public class CardMapper {
         );
     }
 
-    public List<CardCreateResponse> toCardResponseList(List<Card> cards) {
+    public List<CardResponse> toCardResponseList(List<Card> cards) {
         return cards.stream()
                 .map(this::toCardResponse)
                 .toList();

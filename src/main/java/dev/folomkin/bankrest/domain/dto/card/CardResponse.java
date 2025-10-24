@@ -5,7 +5,7 @@ import dev.folomkin.bankrest.domain.dto.user.UserResponse;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public record CardCreateResponse(
+public record CardResponse(
         Long id,
         String encryptedNumber,
         LocalDate expirationDate,

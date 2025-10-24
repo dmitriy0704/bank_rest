@@ -2,8 +2,8 @@ package dev.folomkin.bankrest.service.card;
 
 import dev.folomkin.bankrest.domain.dto.card.CardBalanceChangeRequest;
 import dev.folomkin.bankrest.domain.dto.card.CardBalanceChangeResponse;
-import dev.folomkin.bankrest.domain.dto.card.CardCreateRequest;
-import dev.folomkin.bankrest.domain.dto.card.CardCreateResponse;
+import dev.folomkin.bankrest.domain.dto.card.CardRequest;
+import dev.folomkin.bankrest.domain.dto.card.CardResponse;
 import dev.folomkin.bankrest.domain.mapper.CardMapper;
 import dev.folomkin.bankrest.domain.model.Card;
 import dev.folomkin.bankrest.domain.model.User;
@@ -30,23 +30,23 @@ public class CardServiceImpl implements CardService {
 
     @Override
     @Transactional
-    public CardCreateResponse createCard(CardCreateRequest cardCreateRequest, User currentUser) {
-        return cardSaveServiceUtil.saveCard(cardCreateRequest, currentUser);
+    public CardResponse createCard(CardRequest cardRequest, User currentUser) {
+        return cardSaveServiceUtil.saveCard(cardRequest, currentUser);
     }
 
     @Override
-    public List<CardCreateResponse> getCards() {
+    public List<CardResponse> getCards() {
         return cardMapper.toCardResponseList(cardRepository.findAll());
     }
 
-    public CardCreateResponse findById(Long id) {
+    public CardResponse findById(Long id) {
         Card card = cardRepository.findById(id).orElseThrow(
                 () -> new NoSuchElementException("Карта с id " + id + " не найдена")
         );
         return cardMapper.toCardResponse(card);
     }
 
-    public CardCreateResponse findByEncryptedNumber(String last4) {
+    public CardResponse findByEncryptedNumber(String last4) {
         Card card = cardRepository.findByLast4(last4);
         if (card == null) {
             throw new NoSuchElementException("Карта с номером **** **** **** " + last4 + " не найдена");
@@ -59,5 +59,10 @@ public class CardServiceImpl implements CardService {
     @Transactional
     public CardBalanceChangeResponse balanceChange(CardBalanceChangeRequest request) {
         return cardBalanceServiceUtil.balanceChange(request);
+    }
+
+    @Override
+    public List<CardResponse> getCardsByUserId(Long userId) {
+        return cardRepository.getCardsByUserId(userId);
     }
 }

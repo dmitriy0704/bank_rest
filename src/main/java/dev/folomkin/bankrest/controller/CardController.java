@@ -2,8 +2,8 @@ package dev.folomkin.bankrest.controller;
 
 import dev.folomkin.bankrest.domain.dto.card.CardBalanceChangeRequest;
 import dev.folomkin.bankrest.domain.dto.card.CardBalanceChangeResponse;
-import dev.folomkin.bankrest.domain.dto.card.CardCreateRequest;
-import dev.folomkin.bankrest.domain.dto.card.CardCreateResponse;
+import dev.folomkin.bankrest.domain.dto.card.CardRequest;
+import dev.folomkin.bankrest.domain.dto.card.CardResponse;
 import dev.folomkin.bankrest.domain.model.User;
 import dev.folomkin.bankrest.service.card.CardService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,19 +27,19 @@ public class CardController {
 
     @Operation(summary = "Создание карты", description = "")
     @PostMapping("/create-card")
-    public ResponseEntity<CardCreateResponse> create(@RequestBody CardCreateRequest cardCreateRequest, User user) {
-        return new ResponseEntity<>(cardService.createCard(cardCreateRequest, user), HttpStatus.CREATED);
+    public ResponseEntity<CardResponse> create(@RequestBody CardRequest cardRequest, User user) {
+        return new ResponseEntity<>(cardService.createCard(cardRequest, user), HttpStatus.CREATED);
     }
 
     @Operation(summary = "Получение списка всех карт", description = "")
     @GetMapping("/all")
-    public List<CardCreateResponse> getAllCards() {
+    public List<CardResponse> getAllCards() {
         return cardService.getCards();
     }
 
     @Operation(summary = "Получение карты по id", description = "Поиск по id карты")
     @GetMapping("/card-id")
-    public ResponseEntity<CardCreateResponse> findById(@RequestParam Long id) {
+    public ResponseEntity<CardResponse> getCardById(@RequestParam Long id) {
         return new ResponseEntity<>(cardService.findById(id), HttpStatus.OK);
     }
 
@@ -48,7 +48,7 @@ public class CardController {
             description = "Поиск производится по последним 4-м цифрам номера карты"
     )
     @GetMapping("/card-number")
-    public ResponseEntity<CardCreateResponse> findByEncryptedNumber(@RequestParam String number) {
+    public ResponseEntity<CardResponse> getCardByNumber(@RequestParam String number) {
         return new ResponseEntity<>(cardService.findByEncryptedNumber(number), HttpStatus.OK);
     }
 
@@ -59,5 +59,8 @@ public class CardController {
         return new ResponseEntity<>(cardService.balanceChange(changeRequest), HttpStatus.OK);
     }
 
-    //-> Получение всех карт пользователя:
+    @GetMapping("/cards-userid")
+    public List<CardResponse> getCardsByUserId(@RequestParam Long userId) {
+        return cardService.getCardsByUserId(userId);
+    }
 }

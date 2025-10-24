@@ -1,7 +1,7 @@
 package dev.folomkin.bankrest.utils;
 
-import dev.folomkin.bankrest.domain.dto.card.CardCreateRequest;
-import dev.folomkin.bankrest.domain.dto.card.CardCreateResponse;
+import dev.folomkin.bankrest.domain.dto.card.CardRequest;
+import dev.folomkin.bankrest.domain.dto.card.CardResponse;
 import dev.folomkin.bankrest.domain.mapper.CardMapper;
 import dev.folomkin.bankrest.domain.model.Card;
 import dev.folomkin.bankrest.domain.model.User;
@@ -22,10 +22,10 @@ public class CardSaveServiceUtil {
     private UserRepository userRepository;
     private CardMapper cardMapper;
 
-    public CardCreateResponse saveCard(CardCreateRequest cardCreateRequest, User currentUser) {
+    public CardResponse saveCard(CardRequest cardRequest, User currentUser) {
 
         //-> Поиск по последним 4-м цифрам номера карты
-        String openNumber = cardCreateRequest.openNumber();
+        String openNumber = cardRequest.openNumber();
         String searchedNumber = openNumber.substring(openNumber.length() - 4);
 
         log.info("Поиск карты с номером: {}", searchedNumber);
@@ -39,17 +39,17 @@ public class CardSaveServiceUtil {
         }
 
         card = new Card();
-        card.setOpenNumber(cardCreateRequest.openNumber());
+        card.setOpenNumber(cardRequest.openNumber());
         card.setEncryptedNumber(
-                encryptedNumber(cardCreateRequest.openNumber())
+                encryptedNumber(cardRequest.openNumber())
         );
-        card.setExpirationDate(cardCreateRequest.expirationDate());
-        card.setBalance(cardCreateRequest.balance());
+        card.setExpirationDate(cardRequest.expirationDate());
+        card.setBalance(cardRequest.balance());
         User userToAssign;
-        if (cardCreateRequest.userId() != null) {
-            userToAssign = userRepository.findById(cardCreateRequest.userId())
+        if (cardRequest.userId() != null) {
+            userToAssign = userRepository.findById(cardRequest.userId())
                     .orElseThrow(() -> new NoSuchElementException(
-                            "Пользователь с id " + cardCreateRequest.userId() + " не найден"
+                            "Пользователь с id " + cardRequest.userId() + " не найден"
                     ));
         } else {
             userToAssign = currentUser;
