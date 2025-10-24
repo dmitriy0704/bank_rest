@@ -9,7 +9,12 @@ spring:
   liquibase:
     change-log: db/changelog/db.changelog-master.yml
 server:
-  port: 8198
+  port: 8189
 token:
   signing:
     key: 6B5970337336763979244226452948404D6251655468576D5A7134743777217A
+logging:
+  level:
+    root: info
+#  pattern:
+#    consoleq: %d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
