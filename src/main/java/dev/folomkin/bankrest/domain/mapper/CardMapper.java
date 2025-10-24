@@ -25,6 +25,7 @@ public class CardMapper {
                 card.getId(),
                 card.getEncryptedNumber(),
                 card.getExpirationDate(),
+                card.getCardStatus(),
                 card.getBalance(),
                 userResponse
         );

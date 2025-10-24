@@ -1,5 +1,6 @@
 package dev.folomkin.bankrest.domain.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
@@ -26,6 +27,11 @@ public class Card {
     @Column(name = "expiration_date", nullable = false)
     private LocalDate expirationDate;
 
+    @Schema(description = "Статус", example = "ACTIVE, BLOCKED, ISEXPIRATEDDATE")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private CardStatus cardStatus;
+
     @Column(name = "balance", nullable = false)
     private BigDecimal balance;
 
@@ -38,12 +44,14 @@ public class Card {
             String openNumber,
             String encryptedNumber,
             LocalDate expirationDate,
+            CardStatus cardStatus,
             BigDecimal balance,
             User user) {
         this.id = id;
         this.openNumber = openNumber;
         this.encryptedNumber = encryptedNumber;
         this.expirationDate = expirationDate;
+        this.cardStatus = cardStatus;
         this.balance = balance;
         this.user = user;
     }
@@ -79,6 +87,14 @@ public class Card {
 
     public void setExpirationDate(LocalDate expirationDate) {
         this.expirationDate = expirationDate;
+    }
+
+    public CardStatus getCardStatus() {
+        return cardStatus;
+    }
+
+    public void setCardStatus(CardStatus cardStatus) {
+        this.cardStatus = cardStatus;
     }
 
     public BigDecimal getBalance() {

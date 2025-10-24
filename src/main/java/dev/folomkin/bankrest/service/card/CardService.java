@@ -14,11 +14,18 @@ public interface CardService {
 
     List<CardResponse> getCards();
 
-    CardResponse findById(Long id);
+    CardResponse getCardById(Long id);
 
-    CardResponse findByEncryptedNumber(String last4);
+    CardResponse getCardByNumber(String last4);
 
     CardBalanceChangeResponse balanceChange(CardBalanceChangeRequest cardBalanceChangeRequest);
 
     List<CardResponse> getCardsByUserId(Long userId);
+
+    CardResponse updateStatusById(Long cardId, CardRequest cardRequest);
+    CardResponse updateStatusByNumber(String cardNumber, CardRequest cardRequest);
+
+    void deleteCardById(Long id);
+
+    void deleteCardByNumber(String last4);
 }
