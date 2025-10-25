@@ -1,26 +1,28 @@
 package dev.folomkin.bankrest.service.user;
 
+import dev.folomkin.bankrest.domain.dto.user.UserResponse;
 import dev.folomkin.bankrest.domain.model.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
+import java.util.List;
+
 public interface UserService {
 
-//    List<User> findAll();
+    List<UserResponse> getUsers();
 
-//    Page<UserResponse> findAllByFilter(PageRequest request);
-
-//    Optional<User> getUserById(Long userId);
+    UserResponse getUserById(Long userId);
 
     User save(User user);
 
     User create(User user);
 
-//    User getByUsername(String username);
-
     UserDetailsService userDetailsService();
 
-//    User getCurrentUser();
+// User getByUsername(String username);
+// User getCurrentUser();
+// Page<UserResponse> findAllByFilter(PageRequest request);
 
     void getAdmin();
+
     void getUser();
 }

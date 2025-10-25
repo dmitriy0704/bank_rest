@@ -1,12 +1,10 @@
 package dev.folomkin.bankrest.controller;
 
-import dev.folomkin.bankrest.domain.dto.card.CardBalanceChangeRequest;
-import dev.folomkin.bankrest.domain.dto.card.CardBalanceChangeResponse;
-import dev.folomkin.bankrest.domain.dto.card.CardRequest;
-import dev.folomkin.bankrest.domain.dto.card.CardResponse;
-import dev.folomkin.bankrest.domain.mapper.CardMapper;
+import dev.folomkin.bankrest.domain.dto.card.*;
+import dev.folomkin.bankrest.domain.dto.user.UserResponse;
 import dev.folomkin.bankrest.domain.model.User;
 import dev.folomkin.bankrest.service.card.CardService;
+import dev.folomkin.bankrest.service.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
@@ -29,34 +28,65 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/cards")
 @AllArgsConstructor
-@Tag(name = "Управление картами", description = "Только для авторизованных пользователей")
+@Tag(name = "Управление картами", description = "Только для авторизованных пользователей. От имени Администратора")
 public class CardController {
 
-    private final CardMapper cardMapper;
     private CardService cardService;
+    private UserService userService;
 
-    @Operation(summary = "Создание карты", description = "")
+    /// -> Методы администратора:
+    ///
+    /// Методы карт:
+    ///
+    /// create() - Создание карты с указанием id пользователя карты
+    /// getAllCards() - Получение списка всех карт
+    /// getCardById() - Получение карты по id
+    /// getCardByNumber() - Получение карты по последним 4 цифрам номера
+    /// getCardsByUserId() - Получение списка карт пользователя по id пользователя
+    /// updateCardStatusById() - Обновление статуса карты по id карты
+    /// updateCardStatusByNumber() - Обновление статуса карты по номеру карты
+    /// deleteCardById() - Удаление карты по id карты
+    /// deleteCardByNumber() - Удаление карты по номеру карты
+    /// getCardsByBlockRequest() - Просмотр списка карт с запросом на блокировку
+
+
+    @Operation(
+            summary = "Создание карты",
+            description = "Форма создания карты. Статус карты по умолчанию \"Активна\""
+    )
     @PostMapping(value = "/create-card", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize(value = "hasRole('ADMIN')")
-    public ResponseEntity<CardResponse> create(@Valid @RequestBody CardRequest cardRequest, User user) {
+    public ResponseEntity<CardResponse> create(
+            @Valid @RequestBody CardRequest cardRequest,
+            @AuthenticationPrincipal User user) {
         return new ResponseEntity<>(cardService.createCard(cardRequest, user), HttpStatus.CREATED);
     }
 
-    @Operation(summary = "Получение списка всех карт", description = "")
+
+    @Operation(
+            summary = "Список карт",
+            description = "Получение списка всех карт"
+    )
     @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize(value = "hasRole('ADMIN')")
     public List<CardResponse> getAllCards() {
         return cardService.getCards();
     }
 
-    @Operation(summary = "Получение карты по id", description = "Поиск по id карты")
+
+    @Operation(
+            summary = "Получение карты по id",
+            description = "Поиск по id карты"
+    )
     @GetMapping(value = "/card-id/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize(value = "hasRole('ADMIN')")
-    public ResponseEntity<CardResponse> getCardById(@PathVariable("id")
-                                                    @Parameter(description = "Id карты", required = true)
-                                                    Long id) {
+    public ResponseEntity<CardResponse> getCardById(
+            @PathVariable("id")
+            @Parameter(description = "Id карты", required = true)
+            Long id) {
         return new ResponseEntity<>(cardService.getCardById(id), HttpStatus.OK);
     }
+
 
     @Operation(
             summary = "Получение карты по номеру",
@@ -64,77 +94,103 @@ public class CardController {
     )
     @GetMapping(value = "/card-number/{number}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize(value = "hasRole('ADMIN')")
-    public ResponseEntity<CardResponse> getCardByNumber(@PathVariable("number")
-                                                        @Parameter(description = "Номер карты", required = true)
-                                                        String number) {
+    public ResponseEntity<CardResponse> getCardByNumber(
+            @PathVariable("number")
+            @Parameter(description = "Номер карты", required = true)
+            String number) {
         return new ResponseEntity<>(cardService.getCardByNumber(number), HttpStatus.OK);
     }
 
-    @Operation(summary = "Перевод средств между картами", description = "")
-    @PostMapping(value = "/change-balance", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize(value = "hasRole('ADMIN')")
-    public ResponseEntity<CardBalanceChangeResponse> changeCardBalance(
-            @RequestBody CardBalanceChangeRequest changeRequest) {
-        return new ResponseEntity<>(cardService.balanceChange(changeRequest), HttpStatus.OK);
-    }
 
-    @Operation(summary = "Получение списка всех карт пользователя", description = "")
+    @Operation(
+            summary = "Получение списка всех карт пользователя",
+            description = ""
+    )
     @GetMapping(value = "/cards-userid/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize(value = "hasRole('ADMIN')")
-    public List<CardResponse> getCardsByUserId(@PathVariable("userId")
-                                               @Parameter(description = "Id пользователя", required = true)
-                                               Long userId) {
+    public List<CardResponse> getCardsByUserId(
+            @PathVariable("userId")
+            @Parameter(description = "Id пользователя", required = true)
+            Long userId
+    ) {
         return cardService.getCardsByUserId(userId);
     }
 
 
     @Operation(
             summary = "Обновление статуса карты по id",
-            description = "Необходимо указать id карты и одно из доступных значений статуса")
-    @PutMapping(value = "/update-status-id/{cardId}", produces = MediaType.APPLICATION_JSON_VALUE)
+            description = "Необходимо указать id карты и одно из доступных значений статуса"
+    )
+    @PutMapping(value = "/update-status-card-id/{cardId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize(value = "hasRole('ADMIN')")
     public ResponseEntity<CardResponse> updateCardStatusById(
             @PathVariable("cardId")
             @Parameter(description = "Идентификатор карты", required = true)
             Long cardId,
             @RequestBody @Parameter(description = "Статус карты", required = true)
-            CardRequest cardRequest
+            CardStatusRequest cardRequest
     ) {
         return new ResponseEntity<>(cardService.updateStatusById(cardId, cardRequest), HttpStatus.OK);
     }
 
 
-    @Operation(summary = "Обновление статуса карты по номеру",
-            description = "Необходимо указать последние 4 цифры номера карты и одно из доступных значений статуса")
-    @PutMapping(value = "/update-status-number/{cardNumber}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(
+            summary = "Обновление статуса карты по номеру",
+            description = "Необходимо указать последние 4 цифры номера карты и одно из доступных значений статуса"
+    )
+    @PutMapping(value = "/update-status-card-number/{cardNumber}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize(value = "hasRole('ADMIN')")
     public ResponseEntity<CardResponse> updateCardStatusByNumber(
             @PathVariable("cardNumber")
             @Parameter(description = "Номер карты", required = true)
             String cardNumber,
             @RequestBody @Parameter(description = "Статус карты", required = true)
-            CardRequest cardRequest
+            CardStatusRequest cardRequest
     ) {
         return new ResponseEntity<>(cardService.updateStatusByNumber(cardNumber, cardRequest), HttpStatus.OK);
     }
 
-    @Operation(summary = "Удаление карты по id", description = "Необходимо указать id карты")
+
+    @Operation(
+            summary = "Удаление карты по id",
+            description = "Необходимо указать id карты"
+    )
     @DeleteMapping(value = "/delete-card-id/{cardId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize(value = "hasRole('ADMIN')")
-    public ResponseEntity<String> deleteCardById(@PathVariable("cardId")
-                                                 @Parameter(description = "ID карты", required = true) Long cardId
+    public ResponseEntity<String> deleteCardById(
+            @PathVariable("cardId")
+            @Parameter(description = "ID карты", required = true)
+            Long cardId
     ) {
         cardService.deleteCardById(cardId);
         return new ResponseEntity<>("Карта успешно удалена", HttpStatus.NO_CONTENT);
     }
 
 
-    @Operation(summary = "Удаление карты по номеру", description = "Необходимо указать последние 4 цифры карты")
+    @Operation(
+            summary = "Удаление карты по номеру",
+            description = "Необходимо указать последние 4 цифры карты"
+    )
     @DeleteMapping(value = "/delete-card-number/{number}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize(value = "hasRole('ADMIN')")
-    public ResponseEntity<String> deleteCardByNumber(@PathVariable("number")
-                                                     @Parameter(description = "ID карты", required = true) String number
+    public ResponseEntity<String> deleteCardByNumber(
+            @PathVariable("number")
+            @Parameter(description = "Номер карты", required = true)
+            String number
     ) {
         cardService.deleteCardByNumber(number);
         return new ResponseEntity<>("Карта успешно удалена", HttpStatus.NO_CONTENT);
+    }
+
+
+    @Operation(
+            summary = "Получение списка карт с запросом на блокировку",
+            description = ""
+    )
+    @GetMapping(value = "/cards-blockrequest", produces =  MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize(value = "hasRole('ADMIN')")
+    public ResponseEntity<List<CardResponse>> getCardsByBlockRequest(){
+        return new ResponseEntity<>(cardService.getCardsByBlockRequest(), HttpStatus.OK);
     }
 
 

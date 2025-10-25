@@ -1,11 +1,9 @@
 package dev.folomkin.bankrest.service.card;
 
-import dev.folomkin.bankrest.domain.dto.card.CardBalanceChangeRequest;
-import dev.folomkin.bankrest.domain.dto.card.CardBalanceChangeResponse;
-import dev.folomkin.bankrest.domain.dto.card.CardRequest;
-import dev.folomkin.bankrest.domain.dto.card.CardResponse;
+import dev.folomkin.bankrest.domain.dto.card.*;
 import dev.folomkin.bankrest.domain.mapper.CardMapper;
 import dev.folomkin.bankrest.domain.model.Card;
+import dev.folomkin.bankrest.domain.model.CardStatus;
 import dev.folomkin.bankrest.domain.model.User;
 import dev.folomkin.bankrest.exceptions.NoSuchElementException;
 import dev.folomkin.bankrest.repository.CardRepository;
@@ -47,7 +45,7 @@ public class CardServiceImpl implements CardService {
     }
 
     public CardResponse getCardByNumber(String last4) {
-        Card card = cardRepository.findByLast4(last4);
+        Card card = cardRepository.findCardByLast4(last4);
         if (card == null) {
             throw new NoSuchElementException("Карта с номером **** **** **** " + last4 + " не найдена");
         }
@@ -56,20 +54,27 @@ public class CardServiceImpl implements CardService {
 
     @Override
     @Transactional
-    public CardBalanceChangeResponse balanceChange(CardBalanceChangeRequest request) {
-        return cardBalanceServiceUtil.balanceChange(request);
+    public CardBalanceChangeResponse balanceChange(CardBalanceChangeRequest request, User user) {
+        return cardBalanceServiceUtil.balanceChange(request, user);
     }
 
     @Override
     public List<CardResponse> getCardsByUserId(Long userId) {
-        List<Card> cards = cardRepository.getCardsByUserId(userId);
+        List<Card> cards = cardRepository.findAllCardsByUserId(userId);
         return cardMapper.toCardResponseList(cards);
     }
 
     @Override
-    public CardResponse updateStatusById(Long cardId, CardRequest cardRequest) {
+    public List<CardResponse> getCardsByPrincipal(User principal) {
+        List<Card> cardsByPrincipal = cardRepository.findAllCardsByUserId(principal.getId());
+        return cardMapper.toCardResponseList(cardsByPrincipal);
+    }
+
+
+    @Override
+    public CardResponse updateStatusById(Long cardId, CardStatusRequest cardRequest) {
         Card card = cardRepository.findById(cardId).orElseThrow(
-                () -> new NoSuchElementException("Карта с id " + cardId + " найдена")
+                () -> new NoSuchElementException("Карта с id " + cardId + " не найдена")
         );
         card.setCardStatus(cardRequest.cardStatus());
         cardRepository.save(card);
@@ -77,8 +82,8 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
-    public CardResponse updateStatusByNumber(String cardNumber, CardRequest cardRequest) {
-        Card card = cardRepository.findByLast4(cardNumber);
+    public CardResponse updateStatusByNumber(String cardNumber, CardStatusRequest cardRequest) {
+        Card card = cardRepository.findCardByLast4(cardNumber);
         if (card == null) {
             throw new NoSuchElementException("Карта с номером **** **** **** " + cardNumber + " не найдена");
         }
@@ -90,17 +95,35 @@ public class CardServiceImpl implements CardService {
     @Override
     public void deleteCardById(Long id) {
         Card card = cardRepository.findById(id).orElseThrow(
-                () -> new NoSuchElementException("Карта с id " + id + " найдена")
+                () -> new NoSuchElementException("Карта с id " + id + " не найдена")
         );
         cardRepository.delete(card);
     }
 
     @Override
     public void deleteCardByNumber(String cardNumber) {
-        Card card = cardRepository.findByLast4(cardNumber);
+        Card card = cardRepository.findCardByLast4(cardNumber);
         if (card == null) {
             throw new NoSuchElementException("Карта с номером **** **** **** " + cardNumber + " не найдена");
         }
         cardRepository.delete(card);
+    }
+
+
+    @Override
+    public CardResponse sendingBlockingRequest(String cardNumber) {
+        Card card = cardRepository.findCardByLast4(cardNumber);
+        if (card == null) {
+            throw new NoSuchElementException("Карта с номером **** **** **** " + cardNumber + " не найдена");
+        }
+        card.setCardStatus(CardStatus.BLOCKREQUEST);
+        cardRepository.save(card);
+        return cardMapper.toCardResponse(card);
+    }
+
+
+    @Override
+    public List<CardResponse> getCardsByBlockRequest() {
+        return cardMapper.toCardResponseList(cardRepository.findAllCardsByBlockRequest());
     }
 }

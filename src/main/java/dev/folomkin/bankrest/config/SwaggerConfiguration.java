@@ -18,7 +18,7 @@ public class SwaggerConfiguration {
     public OpenAPI openAPI() {
         return new OpenAPI().addSecurityItem(new SecurityRequirement().addList("Bearer Authentication"))
                 .components(new Components().addSecuritySchemes("Bearer Authentication", createAPIKeyScheme()))
-                .info(new Info().title("Проект управления пользователями и банковскими картами")
+                .info(new Info().title("Bank Rest")
                         .description("Bank Rest API")
                         .version("1.0")
                         .contact(new Contact()

@@ -1,5 +1,7 @@
 package dev.folomkin.bankrest.service.user;
 
+import dev.folomkin.bankrest.domain.dto.user.UserResponse;
+import dev.folomkin.bankrest.domain.mapper.UserMapper;
 import dev.folomkin.bankrest.domain.model.Role;
 import dev.folomkin.bankrest.domain.model.User;
 import dev.folomkin.bankrest.exceptions.AuthExistUserException;
@@ -10,11 +12,40 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @AllArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
+
+
+    /**
+     * Получение списка пользователя по id
+     *
+     * @return Список пользователей.
+     * UserResponse: Пользователь с ограниченным количеством данных
+     */
+    @Override
+    public List<UserResponse> getUsers() {
+        return userMapper.toUserResponseList(userRepository.findAll());
+    }
+
+
+    /**
+     * Получение пользователя по id
+     *
+     * @return Пользователь
+     */
+    @Override
+    public UserResponse getUserById(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new NoSuchElementException("Пользователь с id: " + userId + " не найден")
+        );
+        return userMapper.toUserResponse(user);
+    }
 
     /**
      * Сохранение пользователя
@@ -78,7 +109,6 @@ public class UserServiceImpl implements UserService {
      * <p>
      * Нужен для демонстрации
      */
-    @Deprecated
     public void getAdmin() {
         var user = getCurrentUser();
         user.setRole(Role.ROLE_ADMIN);
@@ -91,7 +121,6 @@ public class UserServiceImpl implements UserService {
      * <p>
      * Нужен для демонстрации
      */
-    @Deprecated
     public void getUser() {
         var user = getCurrentUser();
         user.setRole(Role.ROLE_USER);

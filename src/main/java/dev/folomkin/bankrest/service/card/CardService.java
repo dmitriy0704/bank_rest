@@ -1,9 +1,6 @@
 package dev.folomkin.bankrest.service.card;
 
-import dev.folomkin.bankrest.domain.dto.card.CardBalanceChangeRequest;
-import dev.folomkin.bankrest.domain.dto.card.CardBalanceChangeResponse;
-import dev.folomkin.bankrest.domain.dto.card.CardRequest;
-import dev.folomkin.bankrest.domain.dto.card.CardResponse;
+import dev.folomkin.bankrest.domain.dto.card.*;
 import dev.folomkin.bankrest.domain.model.User;
 
 import java.util.List;
@@ -18,14 +15,22 @@ public interface CardService {
 
     CardResponse getCardByNumber(String last4);
 
-    CardBalanceChangeResponse balanceChange(CardBalanceChangeRequest cardBalanceChangeRequest);
+    CardBalanceChangeResponse balanceChange(CardBalanceChangeRequest cardBalanceChangeRequest,  User user);
 
     List<CardResponse> getCardsByUserId(Long userId);
 
-    CardResponse updateStatusById(Long cardId, CardRequest cardRequest);
-    CardResponse updateStatusByNumber(String cardNumber, CardRequest cardRequest);
+    List<CardResponse> getCardsByPrincipal(User userId);
+
+    CardResponse updateStatusById(Long cardId, CardStatusRequest cardRequest);
+
+    CardResponse updateStatusByNumber(String cardNumber, CardStatusRequest cardRequest);
 
     void deleteCardById(Long id);
 
     void deleteCardByNumber(String last4);
+
+    CardResponse sendingBlockingRequest(String cardNumber);
+
+    List<CardResponse> getCardsByBlockRequest();
+
 }

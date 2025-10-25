@@ -4,6 +4,7 @@ import dev.folomkin.bankrest.domain.dto.card.CardRequest;
 import dev.folomkin.bankrest.domain.dto.card.CardResponse;
 import dev.folomkin.bankrest.domain.mapper.CardMapper;
 import dev.folomkin.bankrest.domain.model.Card;
+import dev.folomkin.bankrest.domain.model.CardStatus;
 import dev.folomkin.bankrest.domain.model.User;
 import dev.folomkin.bankrest.exceptions.InvalidCardFieldException;
 import dev.folomkin.bankrest.exceptions.NoSuchElementException;
@@ -30,7 +31,7 @@ public class CardSaveServiceUtil {
 
         log.info("Поиск карты с номером: {}", searchedNumber);
 
-        Card card = cardRepository.findByLast4(searchedNumber);
+        Card card = cardRepository.findCardByLast4(searchedNumber);
 
         if (card != null) {
             throw new InvalidCardFieldException(
@@ -44,6 +45,7 @@ public class CardSaveServiceUtil {
                 encryptedNumber(cardRequest.openNumber())
         );
         card.setExpirationDate(cardRequest.expirationDate());
+        card.setCardStatus(CardStatus.ACTIVE);
         card.setBalance(cardRequest.balance());
         User userToAssign;
         if (cardRequest.userId() != null) {
