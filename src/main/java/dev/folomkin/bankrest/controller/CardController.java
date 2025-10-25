@@ -2,6 +2,7 @@ package dev.folomkin.bankrest.controller;
 
 import dev.folomkin.bankrest.domain.dto.card.*;
 import dev.folomkin.bankrest.domain.dto.user.UserResponse;
+import dev.folomkin.bankrest.domain.model.Card;
 import dev.folomkin.bankrest.domain.model.User;
 import dev.folomkin.bankrest.service.card.CardService;
 import dev.folomkin.bankrest.service.user.UserService;
@@ -9,8 +10,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +34,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/cards")
 @AllArgsConstructor
-@Tag(name = "Управление картами", description = "Только для авторизованных пользователей. От имени Администратора")
+@Tag(name = "Карты", description = "Только для авторизованных пользователей. От имени Администратора")
 public class CardController {
 
     private CardService cardService;
@@ -52,7 +58,7 @@ public class CardController {
 
     @Operation(
             summary = "Создание карты",
-            description = "Форма создания карты. Статус карты по умолчанию \"Активна\""
+            description = "Форма создания карты. Статус карты по умолчанию \"Активна\". Необходимо указать id  пользователя для которого создается карта"
     )
     @PostMapping(value = "/create-card", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize(value = "hasRole('ADMIN')")
@@ -187,10 +193,28 @@ public class CardController {
             summary = "Получение списка карт с запросом на блокировку",
             description = ""
     )
-    @GetMapping(value = "/cards-blockrequest", produces =  MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/cards-blockrequest", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize(value = "hasRole('ADMIN')")
-    public ResponseEntity<List<CardResponse>> getCardsByBlockRequest(){
+    public ResponseEntity<List<CardResponse>> getCardsByBlockRequest() {
         return new ResponseEntity<>(cardService.getCardsByBlockRequest(), HttpStatus.OK);
+    }
+
+
+    @Operation(summary = "Получение списка всех карт постранично", description = "")
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping(value = "/filter-cards", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Page<CardResponse> toCardResponsePages(
+            @RequestParam(value = "offset", defaultValue = "0")
+            @Min(0) @Parameter(description = "Номер страницы с результатом") Integer offset,
+            @RequestParam(value = "limit", defaultValue = "30") @Min(1) @Max(30)
+            @Parameter(description = "Количество выводимых карт на странице. Минимум 1, максимум 30") Integer limit,
+            @RequestParam(value = "sort") @Parameter(description = "Поле сортировки") String sortField,
+            @RequestParam(value = "owner", required = false) @Parameter(description = "Email пользователя") String owner
+
+    ) {
+
+        PageRequest pageRequest = PageRequest.of(offset, limit, Sort.by(Sort.Direction.ASC, sortField));
+        return cardService.getCardsPages(pageRequest, owner);
     }
 
 

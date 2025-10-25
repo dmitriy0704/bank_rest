@@ -3,6 +3,7 @@ package dev.folomkin.bankrest.utils;
 import dev.folomkin.bankrest.domain.dto.card.CardBalanceChangeRequest;
 import dev.folomkin.bankrest.domain.dto.card.CardBalanceChangeResponse;
 import dev.folomkin.bankrest.domain.model.Card;
+import dev.folomkin.bankrest.domain.model.CardStatus;
 import dev.folomkin.bankrest.domain.model.User;
 import dev.folomkin.bankrest.exceptions.InvalidCardFieldException;
 import dev.folomkin.bankrest.repository.CardRepository;
@@ -29,6 +30,18 @@ public class CardBalanceServiceUtil {
         }
         if (cardIn == null) {
             throw new InvalidCardFieldException("Не найдена карта-получатель");
+        }
+
+        if (cardOut.getCardStatus().equals(CardStatus.BLOCKREQUEST)
+                || cardOut.getCardStatus().equals(CardStatus.BLOCKED)
+        ) {
+            throw new InvalidCardFieldException("Карта-отправитель заблокирована, вы не можете переводить с нее средства");
+        }
+
+        if (cardIn.getCardStatus().equals(CardStatus.BLOCKREQUEST)
+                || cardIn.getCardStatus().equals(CardStatus.BLOCKED)
+        ) {
+            throw new InvalidCardFieldException("Карта-получатель заблокирована, вы не можете зачислять на нее средства");
         }
 
         if (!cardOut.getUser().getId().equals(user.getId())

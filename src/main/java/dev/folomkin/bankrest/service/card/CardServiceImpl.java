@@ -11,10 +11,14 @@ import dev.folomkin.bankrest.repository.UserRepository;
 import dev.folomkin.bankrest.utils.CardBalanceServiceUtil;
 import dev.folomkin.bankrest.utils.CardSaveServiceUtil;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -125,5 +129,20 @@ public class CardServiceImpl implements CardService {
     @Override
     public List<CardResponse> getCardsByBlockRequest() {
         return cardMapper.toCardResponseList(cardRepository.findAllCardsByBlockRequest());
+    }
+
+
+    @Override
+    public Page<CardResponse> getCardsPages(PageRequest pageRequest, String owner) {
+        List<Card> cards = cardRepository.findAll(pageRequest).getContent();
+        if(owner != null) {
+            return new PageImpl<>(cardMapper.toCardResponseList(
+                    cards.stream()
+                            .filter(c -> c.getUser().getEmail().equals(owner))
+                            .collect(Collectors.toList())
+            ), pageRequest, cards.size());
+        } else {
+            return new PageImpl<>(cardMapper.toCardResponseList(cards), pageRequest, cards.size());
+        }
     }
 }

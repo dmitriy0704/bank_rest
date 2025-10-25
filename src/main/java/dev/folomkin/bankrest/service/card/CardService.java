@@ -1,7 +1,11 @@
 package dev.folomkin.bankrest.service.card;
 
 import dev.folomkin.bankrest.domain.dto.card.*;
+import dev.folomkin.bankrest.domain.model.Card;
 import dev.folomkin.bankrest.domain.model.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -32,5 +36,8 @@ public interface CardService {
     CardResponse sendingBlockingRequest(String cardNumber);
 
     List<CardResponse> getCardsByBlockRequest();
+
+
+    Page<CardResponse> getCardsPages(PageRequest pageRequest, String owner);
 
 }

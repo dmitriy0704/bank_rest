@@ -29,8 +29,6 @@ public class CardSaveServiceUtil {
         String openNumber = cardRequest.openNumber();
         String searchedNumber = openNumber.substring(openNumber.length() - 4);
 
-        log.info("Поиск карты с номером: {}", searchedNumber);
-
         Card card = cardRepository.findCardByLast4(searchedNumber);
 
         if (card != null) {
@@ -40,10 +38,8 @@ public class CardSaveServiceUtil {
         }
 
         card = new Card();
-        card.setOpenNumber(cardRequest.openNumber());
-        card.setEncryptedNumber(
-                encryptedNumber(cardRequest.openNumber())
-        );
+        card.setOpenNumber(cardRequest.openNumber().replaceAll("\\s+", ""));
+        card.setEncryptedNumber(encryptedNumber(cardRequest.openNumber()));
         card.setExpirationDate(cardRequest.expirationDate());
         card.setCardStatus(CardStatus.ACTIVE);
         card.setBalance(cardRequest.balance());
@@ -64,8 +60,6 @@ public class CardSaveServiceUtil {
     public String encryptedNumber(String openNumber) {
         if (openNumber == null) return null;
         String digits = openNumber.replaceAll("\\s+", ""); // убираем все пробелы
-        if (!digits.matches("\\d{16}"))
-            return digits;     // если не 16 цифр — просто возвращаем как есть
         return digits.replaceAll("\\d{4}(?=\\d{4})", "**** ").trim();
     }
 }

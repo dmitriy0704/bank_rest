@@ -35,16 +35,16 @@ public class User implements UserDetails, Serializable {
 
     @CreationTimestamp
     @Column(name = "created_at")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private Role role;
 
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<Card> cards = new ArrayList<>();
+//
+//    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+//    private List<Card> cards = new ArrayList<>();
 
     public User(
             Long id,
@@ -134,13 +134,13 @@ public class User implements UserDetails, Serializable {
         this.createdAt = createdAt;
     }
 
-    public List<Card> getCards() {
-        return cards;
-    }
-
-    public void setCards(List<Card> cards) {
-        this.cards = cards;
-    }
+//    public List<Card> getCards() {
+//        return cards;
+//    }
+//
+//    public void setCards(List<Card> cards) {
+//        this.cards = cards;
+//    }
 
     public Role getRole() {
         return role;

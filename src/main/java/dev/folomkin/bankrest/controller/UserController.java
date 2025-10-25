@@ -70,8 +70,6 @@ public class UserController {
     }
 
 
-    /// -> Запрос на блокировку:
-
     @Operation(
             summary = "Отправка запроса на блокировку карты",
             description = "Укажите последние 4 цифры номера"

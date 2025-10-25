@@ -11,9 +11,9 @@ import java.time.LocalDate;
 
 @Schema(description = "Форма регистрации карты")
 public record CardRequest(
-        @Size(min = 16, max = 16, message = "Номер карты должен содержать 16 цифр")
+        @Size(min = 16, max = 19, message = "Номер карты должен содержать 16 цифр")
         @NotBlank(message = "Номер карты не должен быть пустым")
-        @Pattern(regexp = "\\d{16}", message = "Номер карты должен состоять из 16 цифр")
+        @Pattern(regexp = "^(\\d{4}(\\s|)?\\d{4}(\\s|)?\\d{4}(\\s|)?\\d{4})$", message = "Номер карты должен состоять из цифр")
         @Schema(description = "Номер карты")
         String openNumber,
 
