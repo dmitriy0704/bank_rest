@@ -5,12 +5,14 @@ import dev.folomkin.bankrest.domain.mapper.CardMapper;
 import dev.folomkin.bankrest.domain.model.Card;
 import dev.folomkin.bankrest.domain.model.CardStatus;
 import dev.folomkin.bankrest.domain.model.User;
+import dev.folomkin.bankrest.exceptions.InvalidCardFieldException;
 import dev.folomkin.bankrest.exceptions.NoSuchElementException;
 import dev.folomkin.bankrest.repository.CardRepository;
 import dev.folomkin.bankrest.repository.UserRepository;
 import dev.folomkin.bankrest.utils.CardBalanceServiceUtil;
 import dev.folomkin.bankrest.utils.CardSaveServiceUtil;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class CardServiceImpl implements CardService {
@@ -69,9 +72,17 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
-    public List<CardResponse> getCardsByPrincipal(User principal) {
-        List<Card> cardsByPrincipal = cardRepository.findAllCardsByUserId(principal.getId());
-        return cardMapper.toCardResponseList(cardsByPrincipal);
+    public Page<CardResponse> getCardsByPrincipal(PageRequest pageRequest, String cardNumber, User principal) {
+        List<Card> cards = cardRepository.findAllCardsByUserId(principal.getId());
+        Card card = cardRepository.findCardByLast4(cardNumber);
+
+        if (cardNumber != null && !cardNumber.isEmpty()) {
+            return new PageImpl<>(
+                    cardMapper.toCardResponseList(
+                            cards.stream().filter(c -> c.equals(card)).toList()
+                    ), pageRequest, cards.size());
+        }
+        return new PageImpl<>(cardMapper.toCardResponseList(cards), pageRequest, cards.size());
     }
 
 
@@ -87,6 +98,16 @@ public class CardServiceImpl implements CardService {
 
     @Override
     public CardResponse updateStatusByNumber(String cardNumber, CardStatusRequest cardRequest) {
+
+        if (cardNumber == null || cardNumber == "") {
+            throw new InvalidCardFieldException("Укажите последние 4 цифры номера карты");
+        }
+
+        boolean isValidNumber = cardNumber.matches("\\d{4}");
+        if (!isValidNumber) {
+            throw new InvalidCardFieldException("Укажите только 4 последние цифры номера карты");
+        }
+
         Card card = cardRepository.findCardByLast4(cardNumber);
         if (card == null) {
             throw new NoSuchElementException("Карта с номером **** **** **** " + cardNumber + " не найдена");
@@ -115,10 +136,13 @@ public class CardServiceImpl implements CardService {
 
 
     @Override
-    public CardResponse sendingBlockingRequest(String cardNumber) {
+    public CardResponse sendingBlockingRequest(String cardNumber, User user) {
         Card card = cardRepository.findCardByLast4(cardNumber);
         if (card == null) {
             throw new NoSuchElementException("Карта с номером **** **** **** " + cardNumber + " не найдена");
+        }
+        if (!card.getUser().getId().equals(user.getId())) {
+            throw new InvalidCardFieldException("Вы можете запрашивать блокировку только своих карт");
         }
         card.setCardStatus(CardStatus.BLOCKREQUEST);
         cardRepository.save(card);
@@ -135,7 +159,7 @@ public class CardServiceImpl implements CardService {
     @Override
     public Page<CardResponse> getCardsPages(PageRequest pageRequest, String owner) {
         List<Card> cards = cardRepository.findAll(pageRequest).getContent();
-        if(owner != null) {
+        if (owner != null) {
             return new PageImpl<>(cardMapper.toCardResponseList(
                     cards.stream()
                             .filter(c -> c.getUser().getEmail().equals(owner))

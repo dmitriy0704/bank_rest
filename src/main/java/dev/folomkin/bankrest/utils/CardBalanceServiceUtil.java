@@ -22,9 +22,43 @@ public class CardBalanceServiceUtil {
 
     public CardBalanceChangeResponse balanceChange(CardBalanceChangeRequest request, User user) {
 
+        if (request.cardNumberOut().equals(request.cardNumberIn())) {
+            throw new InvalidCardFieldException("Номера карт должны быть разные");
+        }
+
         Card cardOut = cardRepository.findCardByLast4(request.cardNumberOut());
         Card cardIn = cardRepository.findCardByLast4(request.cardNumberIn());
 
+        validateRequest(cardIn, cardOut, user);
+
+        BigDecimal cardOutBalance = cardOut.getBalance();
+        BigDecimal cardInBalance = cardIn.getBalance();
+
+        /// Если средств хватает - выполняем перевод
+        int compBal = cardOutBalance.compareTo(request.amount());
+        if (compBal < 0) {
+            throw new InvalidCardFieldException("Недостаточно средств для перевода");
+        }
+        /// -> С карты отправителя снимаем средства
+        cardOut.setBalance(cardOutBalance.subtract(request.amount()));
+        /// -> зачисляя их на карту получатель
+        cardIn.setBalance(cardInBalance.add(request.amount()));
+        cardRepository.save(cardOut);
+        cardRepository.save(cardIn);
+
+        cardOutBalance = cardOut.getBalance();
+        cardInBalance = cardIn.getBalance();
+
+        return new CardBalanceChangeResponse(
+                cardOut.getEncryptedNumber(),
+                cardOutBalance,
+                cardIn.getEncryptedNumber(),
+                cardInBalance
+        );
+    }
+
+
+    public void validateRequest(Card cardOut, Card cardIn, User user) {
         if (cardOut == null) {
             throw new InvalidCardFieldException("Не найдена карта-отправитель");
         }
@@ -50,46 +84,5 @@ public class CardBalanceServiceUtil {
                     "Вы можете переводить средства только между своими картами"
             );
         }
-
-        BigDecimal cardOutBalance = cardOut.getBalance();
-        BigDecimal cardInBalance = cardIn.getBalance();
-
-        int compareBalance = cardOutBalance.compareTo(cardInBalance);
-
-        ///-> Если баланс карты-отправителя больше баланса карты-получателя:
-        if (compareBalance > 0) {
-            //-> Вычитаем из баланса карты-отправителя баланс карты-получателя
-            BigDecimal diff = cardOutBalance.subtract(cardInBalance);
-
-            ///=> Разницу сравниваем с суммой перевода:
-            /// Если денег хватает - выполняем перевод
-            int res = diff.compareTo(request.amount());
-            if (res < 0) { ///-> Разница балансов меньше суммы перевода
-                throw new InvalidCardFieldException("Недостаточно средств для перевода");
-            }
-            /// -> С карты отправителя снимаем средства
-            cardOut.setBalance(cardOutBalance.subtract(request.amount()));
-            /// -> зачисляя их на карту получатель
-            cardIn.setBalance(cardInBalance.add(request.amount()));
-            cardRepository.save(cardOut);
-            cardRepository.save(cardIn);
-
-            cardOutBalance = cardOut.getBalance();
-            cardInBalance = cardIn.getBalance();
-
-        } else if (compareBalance == 0) {
-            /// -> Баланс карты-отправителя равен балансу карты получателя
-            throw new InvalidCardFieldException("Недостаточно средств для перевода");
-
-        } else {
-            throw new InvalidCardFieldException("Баланс карты-отправителя меньше баланса карты-получателя");
-        }
-
-        return new CardBalanceChangeResponse(
-                cardOut.getEncryptedNumber(),
-                cardOutBalance,
-                cardIn.getEncryptedNumber(),
-                cardInBalance
-        );
     }
 }

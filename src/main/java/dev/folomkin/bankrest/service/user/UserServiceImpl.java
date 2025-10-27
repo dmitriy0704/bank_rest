@@ -8,6 +8,9 @@ import dev.folomkin.bankrest.exceptions.AuthExistUserException;
 import dev.folomkin.bankrest.exceptions.NoSuchElementException;
 import dev.folomkin.bankrest.repository.UserRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
@@ -23,7 +26,7 @@ public class UserServiceImpl implements UserService {
 
 
     /**
-     * Получение списка пользователя по id
+     * Получение списка пользователей
      *
      * @return Список пользователей.
      * UserResponse: Пользователь с ограниченным количеством данных
@@ -31,6 +34,18 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserResponse> getUsers() {
         return userMapper.toUserResponseList(userRepository.findAll());
+    }
+
+
+    /**
+     * Получение списка пользователей с пагинацией
+     *
+     * @return Список пользователей
+     */
+    @Override
+    public Page<UserResponse> getUsersPages(PageRequest pageRequest) {
+        List<User> users = userRepository.findAll(pageRequest).getContent();
+        return new PageImpl<>(userMapper.toUserResponseList(users), pageRequest, users.size());
     }
 
 
@@ -126,4 +141,6 @@ public class UserServiceImpl implements UserService {
         user.setRole(Role.ROLE_USER);
         save(user);
     }
+
+
 }

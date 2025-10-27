@@ -38,13 +38,14 @@ public class CardSaveServiceUtil {
         }
 
         card = new Card();
-        card.setOpenNumber(cardRequest.openNumber().replaceAll("\\s+", ""));
+        card.setOpenNumber(cardRequest.openNumber());
         card.setEncryptedNumber(encryptedNumber(cardRequest.openNumber()));
         card.setExpirationDate(cardRequest.expirationDate());
         card.setCardStatus(CardStatus.ACTIVE);
         card.setBalance(cardRequest.balance());
+
         User userToAssign;
-        if (cardRequest.userId() != null) {
+        if (cardRequest.userId() != null && cardRequest.userId() != 0) {
             userToAssign = userRepository.findById(cardRequest.userId())
                     .orElseThrow(() -> new NoSuchElementException(
                             "Пользователь с id " + cardRequest.userId() + " не найден"

@@ -1,8 +1,8 @@
 package dev.folomkin.bankrest.controller;
 
-import dev.folomkin.bankrest.domain.dto.card.*;
-import dev.folomkin.bankrest.domain.dto.user.UserResponse;
-import dev.folomkin.bankrest.domain.model.Card;
+import dev.folomkin.bankrest.domain.dto.card.CardRequest;
+import dev.folomkin.bankrest.domain.dto.card.CardResponse;
+import dev.folomkin.bankrest.domain.dto.card.CardStatusRequest;
 import dev.folomkin.bankrest.domain.model.User;
 import dev.folomkin.bankrest.service.card.CardService;
 import dev.folomkin.bankrest.service.user.UserService;
@@ -53,12 +53,15 @@ public class CardController {
     /// updateCardStatusByNumber() - Обновление статуса карты по номеру карты
     /// deleteCardById() - Удаление карты по id карты
     /// deleteCardByNumber() - Удаление карты по номеру карты
-    /// getCardsByBlockRequest() - Просмотр списка карт с запросом на блокировку
+    /// getCardsByBlockRequest() - Получение списка карт с запросом на блокировку
+    /// getCardResponsePages() - Получение списка карт с пагинацией, фильтрацией и сортировкой
 
 
     @Operation(
             summary = "Создание карты",
-            description = "Форма создания карты. Статус карты по умолчанию \"Активна\". Необходимо указать id  пользователя для которого создается карта"
+            description = "Форма создания карты. " +
+                    "Статус карты по умолчанию \"Активна\". " +
+                    "Необходимо указать id пользователя для которого создается карта или 0 для текущего пользователя"
     )
     @PostMapping(value = "/create-card", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize(value = "hasRole('ADMIN')")
@@ -70,8 +73,8 @@ public class CardController {
 
 
     @Operation(
-            summary = "Список карт",
-            description = "Получение списка всех карт"
+            summary = "Получение списка всех карт",
+            description = "Список без пагинации и фильтров"
     )
     @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize(value = "hasRole('ADMIN')")
@@ -96,7 +99,7 @@ public class CardController {
 
     @Operation(
             summary = "Получение карты по номеру",
-            description = "Поиск производится по последним 4-м цифрам номера карты"
+            description = "Укажите последние 4 цифры номера карты"
     )
     @GetMapping(value = "/card-number/{number}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize(value = "hasRole('ADMIN')")
@@ -125,7 +128,7 @@ public class CardController {
 
     @Operation(
             summary = "Обновление статуса карты по id",
-            description = "Необходимо указать id карты и одно из доступных значений статуса"
+            description = "Укажите id карты и одно из доступных значений статуса. Статусы: ACTIVE - Активна, BLOCKED - Заблокирована, ISEXPIRATEDDATE - Истек срок действия"
     )
     @PutMapping(value = "/update-status-card-id/{cardId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize(value = "hasRole('ADMIN')")
@@ -142,7 +145,7 @@ public class CardController {
 
     @Operation(
             summary = "Обновление статуса карты по номеру",
-            description = "Необходимо указать последние 4 цифры номера карты и одно из доступных значений статуса"
+            description = "Укажите последние 4 цифры номера карты и одно из доступных значений статуса. Статусы: ACTIVE - Активна, BLOCKED - Заблокирована, ISEXPIRATEDDATE - Истек срок действия"
     )
     @PutMapping(value = "/update-status-card-number/{cardNumber}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize(value = "hasRole('ADMIN')")
@@ -159,7 +162,7 @@ public class CardController {
 
     @Operation(
             summary = "Удаление карты по id",
-            description = "Необходимо указать id карты"
+            description = "Укажите id карты"
     )
     @DeleteMapping(value = "/delete-card-id/{cardId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize(value = "hasRole('ADMIN')")
@@ -169,13 +172,13 @@ public class CardController {
             Long cardId
     ) {
         cardService.deleteCardById(cardId);
-        return new ResponseEntity<>("Карта успешно удалена", HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>("Карта успешно удалена", HttpStatus.OK);
     }
 
 
     @Operation(
             summary = "Удаление карты по номеру",
-            description = "Необходимо указать последние 4 цифры карты"
+            description = "Укажите последние 4 цифры карты"
     )
     @DeleteMapping(value = "/delete-card-number/{number}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize(value = "hasRole('ADMIN')")
@@ -185,7 +188,7 @@ public class CardController {
             String number
     ) {
         cardService.deleteCardByNumber(number);
-        return new ResponseEntity<>("Карта успешно удалена", HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>("Карта успешно удалена", HttpStatus.OK);
     }
 
 
@@ -203,16 +206,14 @@ public class CardController {
     @Operation(summary = "Получение списка всех карт постранично", description = "")
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping(value = "/filter-cards", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Page<CardResponse> toCardResponsePages(
+    public Page<CardResponse> getCardsPages(
             @RequestParam(value = "offset", defaultValue = "0")
             @Min(0) @Parameter(description = "Номер страницы с результатом") Integer offset,
             @RequestParam(value = "limit", defaultValue = "30") @Min(1) @Max(30)
             @Parameter(description = "Количество выводимых карт на странице. Минимум 1, максимум 30") Integer limit,
             @RequestParam(value = "sort") @Parameter(description = "Поле сортировки") String sortField,
             @RequestParam(value = "owner", required = false) @Parameter(description = "Email пользователя") String owner
-
     ) {
-
         PageRequest pageRequest = PageRequest.of(offset, limit, Sort.by(Sort.Direction.ASC, sortField));
         return cardService.getCardsPages(pageRequest, owner);
     }

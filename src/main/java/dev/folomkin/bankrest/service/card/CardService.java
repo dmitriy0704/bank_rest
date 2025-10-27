@@ -1,11 +1,9 @@
 package dev.folomkin.bankrest.service.card;
 
 import dev.folomkin.bankrest.domain.dto.card.*;
-import dev.folomkin.bankrest.domain.model.Card;
 import dev.folomkin.bankrest.domain.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -19,11 +17,11 @@ public interface CardService {
 
     CardResponse getCardByNumber(String last4);
 
-    CardBalanceChangeResponse balanceChange(CardBalanceChangeRequest cardBalanceChangeRequest,  User user);
+    CardBalanceChangeResponse balanceChange(CardBalanceChangeRequest cardBalanceChangeRequest, User user);
 
     List<CardResponse> getCardsByUserId(Long userId);
 
-    List<CardResponse> getCardsByPrincipal(User userId);
+    Page<CardResponse> getCardsByPrincipal(PageRequest pageRequest, String cardNumber, User userId);
 
     CardResponse updateStatusById(Long cardId, CardStatusRequest cardRequest);
 
@@ -33,11 +31,9 @@ public interface CardService {
 
     void deleteCardByNumber(String last4);
 
-    CardResponse sendingBlockingRequest(String cardNumber);
+    CardResponse sendingBlockingRequest(String cardNumber, User user);
 
     List<CardResponse> getCardsByBlockRequest();
 
-
     Page<CardResponse> getCardsPages(PageRequest pageRequest, String owner);
-
 }
