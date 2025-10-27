@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -73,9 +72,10 @@ public class CardServiceImpl implements CardService {
 
     @Override
     public Page<CardResponse> getCardsByPrincipal(PageRequest pageRequest, String cardNumber, User principal) {
-        List<Card> cards = cardRepository.findAllCardsByUserId(principal.getId());
+        ///-> Получаем все карты пользователя с пагинацией
+        List<Card> cards = cardRepository.findAllCardsByUserIdPages(pageRequest, principal.getId());
+        ///-> Получаем карту по номеру
         Card card = cardRepository.findCardByLast4(cardNumber);
-
         if (cardNumber != null && !cardNumber.isEmpty()) {
             return new PageImpl<>(
                     cardMapper.toCardResponseList(
@@ -84,7 +84,6 @@ public class CardServiceImpl implements CardService {
         }
         return new PageImpl<>(cardMapper.toCardResponseList(cards), pageRequest, cards.size());
     }
-
 
     @Override
     public CardResponse updateStatusById(Long cardId, CardStatusRequest cardRequest) {
@@ -98,16 +97,13 @@ public class CardServiceImpl implements CardService {
 
     @Override
     public CardResponse updateStatusByNumber(String cardNumber, CardStatusRequest cardRequest) {
-
         if (cardNumber == null || cardNumber == "") {
             throw new InvalidCardFieldException("Укажите последние 4 цифры номера карты");
         }
-
         boolean isValidNumber = cardNumber.matches("\\d{4}");
         if (!isValidNumber) {
             throw new InvalidCardFieldException("Укажите только 4 последние цифры номера карты");
         }
-
         Card card = cardRepository.findCardByLast4(cardNumber);
         if (card == null) {
             throw new NoSuchElementException("Карта с номером **** **** **** " + cardNumber + " не найдена");
@@ -134,7 +130,6 @@ public class CardServiceImpl implements CardService {
         cardRepository.delete(card);
     }
 
-
     @Override
     public CardResponse sendingBlockingRequest(String cardNumber, User user) {
         Card card = cardRepository.findCardByLast4(cardNumber);
@@ -149,22 +144,21 @@ public class CardServiceImpl implements CardService {
         return cardMapper.toCardResponse(card);
     }
 
-
     @Override
     public List<CardResponse> getCardsByBlockRequest() {
         return cardMapper.toCardResponseList(cardRepository.findAllCardsByBlockRequest());
     }
 
-
     @Override
     public Page<CardResponse> getCardsPages(PageRequest pageRequest, String owner) {
         List<Card> cards = cardRepository.findAll(pageRequest).getContent();
         if (owner != null) {
+            List<Card> cardsUserByEmail = cardRepository.findAllCardsByUserEmailPages(pageRequest, owner);
             return new PageImpl<>(cardMapper.toCardResponseList(
-                    cards.stream()
+                    cardsUserByEmail.stream()
                             .filter(c -> c.getUser().getEmail().equals(owner))
-                            .collect(Collectors.toList())
-            ), pageRequest, cards.size());
+                            .toList()
+            ), pageRequest, cardsUserByEmail.size());
         } else {
             return new PageImpl<>(cardMapper.toCardResponseList(cards), pageRequest, cards.size());
         }

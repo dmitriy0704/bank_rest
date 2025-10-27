@@ -209,8 +209,8 @@ public class CardController {
     public Page<CardResponse> getCardsPages(
             @RequestParam(value = "offset", defaultValue = "0")
             @Min(0) @Parameter(description = "Номер страницы с результатом") Integer offset,
-            @RequestParam(value = "limit", defaultValue = "30") @Min(1) @Max(30)
-            @Parameter(description = "Количество выводимых карт на странице. Минимум 1, максимум 30") Integer limit,
+            @RequestParam(value = "limit", defaultValue = "50") @Min(1) @Max(50)
+            @Parameter(description = "Количество выводимых карт на странице. Минимум 1, максимум 50") Integer limit,
             @RequestParam(value = "sort") @Parameter(description = "Поле сортировки") String sortField,
             @RequestParam(value = "owner", required = false) @Parameter(description = "Email пользователя") String owner
     ) {
