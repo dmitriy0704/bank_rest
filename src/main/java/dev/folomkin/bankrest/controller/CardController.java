@@ -34,14 +34,12 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/cards")
 @AllArgsConstructor
-@Tag(name = "Карты", description = "Только для авторизованных пользователей. От имени Администратора")
+@Tag(name = "Карты", description = "Только для авторизованных пользователей. Для Администратора")
 public class CardController {
 
     private CardService cardService;
     private UserService userService;
 
-    /// -> Методы администратора:
-    ///
     /// Методы карт:
     ///
     /// create() - Создание карты с указанием id пользователя карты

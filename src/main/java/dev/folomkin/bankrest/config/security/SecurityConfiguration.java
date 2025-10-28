@@ -87,16 +87,13 @@ public class SecurityConfiguration {
         return config.getAuthenticationManager();
     }
 
-
     @Bean
     public AuthenticationEntryPoint authenticationEntryPoint() {
         return new CustomAuthenticationEntryPoint();
     }
 
-
     @Bean
     public AccessDeniedHandler accessDeniedHandler() {
         return new AccessDeniedHandlerImpl();
     }
-
 }
