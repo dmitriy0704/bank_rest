@@ -61,14 +61,16 @@ public class CardController {
                     "Статус карты по умолчанию \"Активна\". " +
                     "Необходимо указать id пользователя для которого создается карта или 0 для текущего пользователя"
     )
-    @PostMapping(value = "/create-card", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/create-card",
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE
+    )
     @PreAuthorize(value = "hasRole('ADMIN')")
     public ResponseEntity<CardResponse> create(
             @Valid @RequestBody CardRequest cardRequest,
             @AuthenticationPrincipal User user) {
         return new ResponseEntity<>(cardService.createCard(cardRequest, user), HttpStatus.CREATED);
     }
-
 
     @Operation(
             summary = "Получение списка всех карт",

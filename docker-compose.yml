@@ -18,7 +18,7 @@ services:
 #      - SPRING_DATASOURCE_URL=jdbc:postgresql://app-db/task_manager
 
   app-db:
-    image: postgres:latest
+    image: postgres:17-alpine
     restart: always
     environment:
       - POSTGRES_USER=user

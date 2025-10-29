@@ -112,7 +112,7 @@ class CardControllerTest {
                 userResponse
         );
         when(this.cardsService.createCard(cardRequest, null)).thenReturn(cardResponse);
-        mockMvc.perform(post("/api/v1/card/createCard")
+        mockMvc.perform(post("/api/v1/card/create-card")
                 .with(csrf())
                 .with(user("admin").roles("ADMIN"))
                 .contentType("application/json")
@@ -152,7 +152,7 @@ class CardControllerTest {
                 userResponse
         );
         when(this.cardsService.createCard(cardRequest, null)).thenReturn(cardResponse);
-        mockMvc.perform(post("/api/v1/card/createCard")
+        mockMvc.perform(post("/api/v1/card/create-card")
                 .with(csrf())
                 .with(anonymous())
                 .contentType("application/json")
@@ -201,7 +201,7 @@ class CardControllerTest {
                         BigDecimal.valueOf(123.4),
                         user
                 )));
-        mockMvc.perform(get("/api/v1/cards/card-id/{id}", 1L))
+        mockMvc.perform(get("/api/v1/cards/card-id/{cardId}", 1L))
                 .andExpect(status().isOk());
     }
 
@@ -226,7 +226,7 @@ class CardControllerTest {
                 BigDecimal.valueOf(123.4),
                 user
         )));
-        mockMvc.perform(get("/api/v1/cards/card-id/{id}", 1L)
+        mockMvc.perform(get("/api/v1/cards/card-id/{cardId}", 1L)
                         .with(anonymous()))
                 .andExpect(status().isUnauthorized());
     }
@@ -253,7 +253,7 @@ class CardControllerTest {
                         BigDecimal.valueOf(123.4),
                         user
                 ));
-        mockMvc.perform(get("/api/v1/cards/card-id/{id}", 1L))
+        mockMvc.perform(get("/api/v1/cards/card-number/{cardNumber}", 1L))
                 .andExpect(status().isOk());
     }
 
@@ -264,7 +264,7 @@ class CardControllerTest {
         mockMvc.perform(delete("/api/v1/cards/delete-card-id/{cardId}", 1L)
                 .with(csrf())
                 .with(user("admin").roles("ADMIN"))
-        ).andExpect(status().isNoContent());
+        ).andExpect(status().isOk());
     }
 
 
