@@ -25,7 +25,7 @@ public class DemoController {
 
 
     @GetMapping("/set-user")
-    @Operation(summary = "Стать Юзером")
+    @Operation(summary = "Стать Пользователем")
     public String getUser() {
         service.getUser();
         return "Теперь вы можете отправлять запросы от имени пользователя";

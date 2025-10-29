@@ -68,7 +68,7 @@ public class UserController {
     }
 
 
-    @Operation(summary = "Получение списка своих карт пользователем. Для Пользователя", description = "")
+    @Operation(summary = "Получение списка своих карт текущим пользователем. Для Пользователя", description = "")
     @GetMapping("/my-cards")
     public Page<CardResponse> getMyCards(
             @RequestParam(value = "offset", defaultValue = "0")

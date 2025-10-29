@@ -25,4 +25,6 @@ public record CardResponse(
 
         @Schema(description = "Пользователь карты")
         UserResponse owner
-) {}
+) {
+
+}

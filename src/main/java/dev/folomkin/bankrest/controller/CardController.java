@@ -85,13 +85,13 @@ public class CardController {
             summary = "Получение карты по id",
             description = "Поиск по id карты"
     )
-    @GetMapping(value = "/card-id/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/card-id/{cardId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize(value = "hasRole('ADMIN')")
     public ResponseEntity<CardResponse> getCardById(
-            @PathVariable("id")
+            @PathVariable("cardId")
             @Parameter(description = "Id карты", required = true)
-            Long id) {
-        return new ResponseEntity<>(cardService.getCardById(id), HttpStatus.OK);
+            Long cardId) {
+        return new ResponseEntity<>(cardService.getCardById(cardId), HttpStatus.OK);
     }
 
 
@@ -99,13 +99,13 @@ public class CardController {
             summary = "Получение карты по номеру",
             description = "Укажите последние 4 цифры номера карты"
     )
-    @GetMapping(value = "/card-number/{number}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/card-number/{cardNumber}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize(value = "hasRole('ADMIN')")
     public ResponseEntity<CardResponse> getCardByNumber(
-            @PathVariable("number")
+            @PathVariable("cardNumber")
             @Parameter(description = "Номер карты", required = true)
-            String number) {
-        return new ResponseEntity<>(cardService.getCardByNumber(number), HttpStatus.OK);
+            String cardNumber) {
+        return new ResponseEntity<>(cardService.getCardByNumber(cardNumber), HttpStatus.OK);
     }
 
 
@@ -178,14 +178,14 @@ public class CardController {
             summary = "Удаление карты по номеру",
             description = "Укажите последние 4 цифры карты"
     )
-    @DeleteMapping(value = "/delete-card-number/{number}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = "/delete-card-number/{cardNumber}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize(value = "hasRole('ADMIN')")
     public ResponseEntity<String> deleteCardByNumber(
-            @PathVariable("number")
+            @PathVariable("cardNumber")
             @Parameter(description = "Номер карты", required = true)
-            String number
+            String cardNumber
     ) {
-        cardService.deleteCardByNumber(number);
+        cardService.deleteCardByNumber(cardNumber);
         return new ResponseEntity<>("Карта успешно удалена", HttpStatus.OK);
     }
 
