@@ -80,16 +80,6 @@ class CardControllerTest {
         user.setCreatedAt(LocalDateTime.now());
         user.setRole(Role.ROLE_USER);
 
-//        Card card = new Card(
-//                1L,
-//                "1111 2222 3333 4444",
-//                "**** **** **** 4444",
-//                LocalDate.now(),
-//                CardStatus.ACTIVE,
-//                BigDecimal.valueOf(123.4),
-//                user
-//        );
-
         CardRequest cardRequest = new CardRequest(
                 "1111 2222 3333 4444",
                 LocalDate.now(),

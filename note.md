@@ -1,46 +1,146 @@
-Отлично 👍 Давай соберём полноценный интеграционный тест **“с нуля”**, который:
-
-* Поднимает **весь Spring Boot контекст** (`@SpringBootTest` + `@AutoConfigureMockMvc`)
-* Использует **H2 in-memory базу**
-* Создаёт пользователя ADMIN в тестовой базе
-* Авторизует его через реальный эндпоинт `/api/v1/auth/login`
-* Берёт JWT из ответа
-* Использует этот JWT для вызова `/api/v1/cards/create-card`
-* Проверяет, что возвращается JSON с нужным `Content-Type` и данными
+Отличный вопрос, Дмитрий 💪 — это именно тот шаг, который отличает **юнит-тесты** от **реально интеграционных**.
+`Testcontainers` — это мощный инструмент для тестирования **в реальной среде**, но при этом **изолированно**.
+Разберём всё по шагам 👇
 
 ---
 
-## Пример интеграционного теста
+## 🚀 Что такое Testcontainers
+
+**Testcontainers** — библиотека для Java (и Spring Boot),
+которая позволяет запускать **настоящие Docker-контейнеры** прямо из тестов.
+Например:
+
+* PostgreSQL, MySQL, MongoDB, Redis
+* Kafka, RabbitMQ
+* Keycloak, MinIO, ElasticSearch
+* и многое другое
+
+📦 Всё поднимается автоматически перед тестом
+и останавливается после завершения — никакого мусора в системе.
+
+---
+
+## 🧠 Что им можно тестировать
+
+Testcontainers нужен для **интеграционных тестов**, где ты хочешь убедиться,
+что твой код реально работает с инфраструктурой, а не с моками.
+
+| Цель теста                                 | Подходит Testcontainers? | Пример                       |
+| ------------------------------------------ | ------------------------ | ---------------------------- |
+| Проверить логику контроллера               | ❌ Нет (MockMvc)          | мокнутые сервисы             |
+| Проверить слой сервисов                    | ⚙️ Иногда                | если там SQL-запросы         |
+| Проверить JPA/Repository слой              | ✅ Да                     | реальные SQL-запросы         |
+| Проверить интеграцию с Kafka, MinIO, Redis | ✅ Да                     | брокеры, очереди и хранилища |
+| Проверить реальную работу REST API + БД    | ✅✅ Да                    | full-stack тест              |
+
+---
+
+## 🧩 Пример: PostgreSQL + Spring Boot
+
+Допустим, у тебя приложение использует PostgreSQL.
+Ты хочешь убедиться, что репозитории реально работают с SQL (а не с H2).
+
+---
+
+### 1️⃣ Добавь зависимости
+
+В `build.gradle` (или `pom.xml`):
+
+```groovy
+testImplementation 'org.testcontainers:junit-jupiter'
+testImplementation 'org.testcontainers:postgresql'
+```
+
+---
+
+### 2️⃣ Напиши тест с контейнером
 
 ```java
-package dev.folomkin.bankrest.controller;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.folomkin.bankrest.dto.CardRequest;
-import dev.folomkin.bankrest.dto.CardResponse;
-import dev.folomkin.bankrest.entity.User;
-import dev.folomkin.bankrest.repository.UserRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-
-import java.time.LocalDate;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
 @SpringBootTest
+@Testcontainers
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+class CardRepositoryTest {
+
+    @Container
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
+            .withDatabaseName("testdb")
+            .withUsername("test")
+            .withPassword("test");
+
+    @Autowired
+    private CardRepository cardRepository;
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+    }
+
+    @Test
+    void shouldSaveAndFindCard() {
+        CardEntity card = new CardEntity();
+        card.setOpenNumber("1111 2222 3333 4444");
+        card.setExpirationDate(LocalDate.of(2025, 10, 29));
+        card.setBalance(123.45);
+        cardRepository.save(card);
+
+        var found = cardRepository.findById(card.getId());
+        assertTrue(found.isPresent());
+        assertEquals("1111 2222 3333 4444", found.get().getOpenNumber());
+    }
+}
+```
+
+---
+
+### 🔍 Что здесь происходит
+
+| Что                                          | Зачем                                                  |
+| -------------------------------------------- | ------------------------------------------------------ |
+| `@Testcontainers`                            | говорит JUnit, что мы используем контейнеры            |
+| `@Container`                                 | создаёт и управляет PostgreSQL-контейнером             |
+| `DynamicPropertySource`                      | подставляет параметры подключения в Spring Boot        |
+| `@AutoConfigureTestDatabase(replace = NONE)` | отключает H2, чтобы использовать контейнер             |
+| `CardRepository`                             | реальный Spring Data репозиторий                       |
+| В тесте                                      | мы реально сохраняем и читаем из PostgreSQL контейнера |
+
+---
+
+## 🧱 Что можно потестировать с Testcontainers
+
+| Тип теста                   | Пример                                                          |
+| --------------------------- | --------------------------------------------------------------- |
+| **Repository-тесты**        | Проверить работу запросов (`@Query`, join’ы, фильтры)           |
+| **Service-тесты**           | Проверить бизнес-логику, которая реально ходит в БД             |
+| **Full Integration (REST)** | Поднять весь Spring Boot контекст и тестировать `/api/v1/cards` |
+| **Kafka тесты**             | Проверить, что сообщения реально публикуются/читаются           |
+| **MinIO/S3 тесты**          | Проверить загрузку и скачивание файлов                          |
+| **Keycloak тесты**          | Проверить авторизацию по JWT                                    |
+
+---
+
+## ⚡ Пример Full Integration Test (REST + PostgreSQL)
+
+```java
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Testcontainers
 @AutoConfigureMockMvc
-@AutoConfigureTestDatabase
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class CardControllerIT {
+
+    @Container
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
+            .withDatabaseName("testdb")
+            .withUsername("test")
+            .withPassword("test");
+
+    @DynamicPropertySource
+    static void postgresProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+    }
 
     @Autowired
     private MockMvc mockMvc;
@@ -49,104 +149,47 @@ class CardControllerIT {
     private ObjectMapper objectMapper;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    private String adminJwtToken;
-
-    @BeforeEach
-    void setUp() throws Exception {
-        // 1. Создаём пользователя-админа в тестовой БД
-        User admin = new User();
-        admin.setUsername("admin");
-        admin.setPassword(passwordEncoder.encode("password"));
-        admin.setRole("ROLE_ADMIN");
-        userRepository.save(admin);
-
-        // 2. Логинимся через реальный эндпоинт /auth/login
-        var loginJson = """
-            {"username":"admin","password":"password"}
-        """;
-
-        var result = mockMvc.perform(post("/api/v1/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(loginJson))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        String response = result.getResponse().getContentAsString();
-        System.out.println(">>> LOGIN RESPONSE = " + response); // Посмотрим структуру
-
-        // 3. Берём JWT из ответа
-        var jsonNode = objectMapper.readTree(response);
-        // Подставь правильное поле, которое реально возвращает твой login-эндпоинт
-        adminJwtToken = jsonNode.get("accessToken").asText();
-    }
+    private CardRepository cardRepository;
 
     @Test
-    void shouldCreateCardSuccessfully() throws Exception {
-        // 4. Подготовка JSON запроса
-        var request = new CardRequest();
-        request.setOpenNumber("6318 0172 1681 9169");
-        request.setExpirationDate(LocalDate.of(2025, 10, 29));
-        request.setBalance(123.4);
-        request.setUserId(1L);
+    void shouldCreateCardInRealDatabase() throws Exception {
+        String json = """
+            {
+              "openNumber": "6318 0172 1681 9169",
+              "expirationDate": "2025-10-29",
+              "balance": 123.4,
+              "userId": 1
+            }
+        """;
 
-        String json = objectMapper.writeValueAsString(request);
-
-        // 5. Отправка запроса с JWT
         mockMvc.perform(post("/api/v1/cards/create-card")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .header("Authorization", "Bearer " + adminJwtToken)
-                        .content(json))
-                .andDo(print())
-                .andExpect(status().isCreated())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.openNumber").value("6318 0172 1681 9169"))
-                .andExpect(jsonPath("$.balance").value(123.4))
-                .andExpect(jsonPath("$.userId").value(1));
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json))
+            .andExpect(status().isCreated());
+
+        assertEquals(1, cardRepository.count());
     }
 }
 ```
 
----
+📦 Этот тест:
 
-### 🔑 Объяснение
-
-1. **Создание тестового пользователя** (`@BeforeEach`):
-
-    * Нужно, чтобы `@PreAuthorize("hasRole('ADMIN')")` пропустил запрос.
-2. **Реальная авторизация через `/auth/login`**:
-
-    * Возвращается JWT.
-    * JWT сохраняем в переменной `adminJwtToken`.
-3. **MockMvc запрос к `/create-card`**:
-
-    * Передаём JWT в заголовке `Authorization`.
-    * Проверяем `status().isCreated()` и `Content-Type`.
-4. **`.andDo(print())`**:
-
-    * Выводит реальный HTTP-ответ в консоль.
-    * Помогает понять, что реально возвращает сервер, особенно полезно для отладки JWT.
+* запускает **реальный PostgreSQL контейнер**,
+* стартует **весь Spring Boot контекст**,
+* выполняет реальный HTTP POST через MockMvc,
+* проверяет, что запись реально сохранилась в базе.
 
 ---
 
-### ⚙️ Совет
+## 🧠 Итого
 
-* Если твой эндпоинт логина возвращает поле не `accessToken`, а, например, `token` или `jwt`, замени строку:
-
-```java
-adminJwtToken = jsonNode.get("accessToken").asText();
-```
-
-на правильное имя поля.
-
-* Убедись, что в тестовой БД есть `User` с ролью `ROLE_ADMIN`.
+| Цель                                         | Какой подход                         |
+| -------------------------------------------- | ------------------------------------ |
+| Проверить контроллеры                        | `@WebMvcTest` + моки                 |
+| Проверить логику и БД                        | `@SpringBootTest` + Testcontainers   |
+| Проверить конкретные запросы JPA             | `@DataJpaTest` + Testcontainers      |
+| Проверить интеграцию с Kafka / Redis / MinIO | `@SpringBootTest` + нужный контейнер |
 
 ---
 
-Если хочешь, я могу прислать **вариант с полностью “готовой” H2 базой + сущностями Card и User**, чтобы этот тест реально выполнялся без доработок.
-
-Хочешь, чтобы я это сделал?
+Хочешь, я покажу, как подключить **несколько контейнеров** сразу — например PostgreSQL + Redis, и синхронизировать их в одном интеграционном тесте?

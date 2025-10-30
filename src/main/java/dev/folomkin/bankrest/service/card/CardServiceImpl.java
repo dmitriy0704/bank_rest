@@ -86,6 +86,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    @Transactional
     public CardResponse updateStatusById(Long cardId, CardStatusRequest cardRequest) {
         Card card = cardRepository.findById(cardId).orElseThrow(
                 () -> new NoSuchElementException("Карта с id " + cardId + " не найдена")
@@ -96,6 +97,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    @Transactional
     public CardResponse updateStatusByNumber(String cardNumber, CardStatusRequest cardRequest) {
         if (cardNumber == null || cardNumber == "") {
             throw new InvalidCardFieldException("Укажите последние 4 цифры номера карты");
@@ -114,6 +116,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    @Transactional
     public void deleteCardById(Long id) {
         Card card = cardRepository.findById(id).orElseThrow(
                 () -> new NoSuchElementException("Карта с id " + id + " не найдена")
@@ -122,6 +125,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    @Transactional
     public void deleteCardByNumber(String cardNumber) {
         Card card = cardRepository.findCardByLast4(cardNumber);
         if (card == null) {
@@ -131,6 +135,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    @Transactional
     public CardResponse sendingBlockingRequest(String cardNumber, User user) {
         Card card = cardRepository.findCardByLast4(cardNumber);
         if (card == null) {
