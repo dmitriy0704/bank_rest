@@ -226,7 +226,6 @@ public class CardControllerIT {
     @Test
     @WithMockUser(username = "admin", roles = {"ADMIN"})
     public void whenPostRequestToCardAndValidCard_thenCorrectResponse() throws Exception {
-
         CardRequest request = new CardRequest(
                 "6318 0172 1681 9169",
                 LocalDate.of(2025, 10, 29),
@@ -244,7 +243,6 @@ public class CardControllerIT {
                 .andExpect(jsonPath("$.encryptedNumber").value("6318 0172 1681 9169"))
                 .andExpect(jsonPath("$.balance").value(123.4))
                 .andExpect(jsonPath("$.userId").value(1));
-
 
 //        MediaType applicationJson = new MediaType(MediaType.APPLICATION_JSON);
 //        String cardRequest = "{\"openNumber\":\"1111 2222 3333 4444\",\"expirationDate\":\"2025-10-29\",\"balance\":123.4,\"userId\":1}";
