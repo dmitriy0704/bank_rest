@@ -37,6 +37,10 @@ public class CardSaveServiceUtil {
             );
         }
 
+        if (cardRequest.balance().signum() == -1) {
+            throw new InvalidCardFieldException("Баланс не должен быть отрицательным");
+        }
+
         card = new Card();
         card.setOpenNumber(cardRequest.openNumber());
         card.setEncryptedNumber(encryptedNumber(cardRequest.openNumber()));
