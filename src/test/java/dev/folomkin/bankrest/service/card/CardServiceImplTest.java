@@ -127,7 +127,7 @@ class CardServiceImplTest {
                 .isInstanceOf(NoSuchElementException.class)
                 .hasMessage("Карта с id 1 не найдена");
     }
-    
+
 // Если id - null
 //    @Test
 //    void deleteCardById_ShouldNotInteractWithRepository_WhenInvalidId() {
