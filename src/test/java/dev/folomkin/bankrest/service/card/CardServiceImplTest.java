@@ -7,8 +7,10 @@ import dev.folomkin.bankrest.domain.model.Card;
 import dev.folomkin.bankrest.domain.model.CardStatus;
 import dev.folomkin.bankrest.domain.model.Role;
 import dev.folomkin.bankrest.domain.model.User;
+import dev.folomkin.bankrest.exceptions.NoSuchElementException;
 import dev.folomkin.bankrest.repository.CardRepository;
 import dev.folomkin.bankrest.utils.CardSaveServiceUtil;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,7 +21,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -40,7 +45,6 @@ class CardServiceImplTest {
     private User user;
     private Card card;
 
-
     @BeforeEach
     void setUp() {
         // Подготовка тестовых данных
@@ -50,6 +54,7 @@ class CardServiceImplTest {
                 BigDecimal.valueOf(123.4),
                 1L
         );
+
         userResponse = new UserResponse(
                 1L,
                 "username",
@@ -77,7 +82,7 @@ class CardServiceImplTest {
     @Test
     void createCard_ShouldReturnCardResponse_WhenValidRequest() {
         ///-> Given: Мокируем зависимости
-          CardResponse expectedResponse = new CardResponse(
+        CardResponse expectedResponse = new CardResponse(
                 1L,
                 "**** **** **** 0009",
                 LocalDate.now(),
@@ -88,7 +93,7 @@ class CardServiceImplTest {
         when(cardSaveServiceUtil.saveCard(request, user)).thenReturn(expectedResponse);
 
         ///-> When: Вызов сервиса (делегирует в мок)
-        CardResponse response  = cardService.createCard(request, user);
+        CardResponse response = cardService.createCard(request, user);
 
         ///-> Then: Проверки
         assertThat(response).isNotNull();
@@ -97,18 +102,42 @@ class CardServiceImplTest {
         assertThat(response.balance()).isEqualTo(BigDecimal.valueOf(123.4));
         assertThat(response.owner().id()).isEqualTo(1L);
     }
+
+    @Test
+    void deleteCardById_ShouldDeleteCard_WhenCardExists() {
+        // Given: Мокаем, что карта найдена
+        when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+
+        // When: Вызов метода сервиса
+        cardService.deleteCardById(1L);
+
+        // Then: Проверяем, что delete вызван
+        verify(cardRepository).delete(card);
+        verifyNoMoreInteractions(cardRepository); // Нет лишних вызовов
+    }
+
+
+    @Test
+    void deleteCardById_ShouldThrowException_WhenCardNotFound() {
+        // Given: Мокаем, что карта не найдена
+        when(cardRepository.findById(1L)).thenReturn(Optional.empty());
+
+        // When & Then: Ожидаем exception
+        assertThatThrownBy(() -> cardService.deleteCardById(1L))
+                .isInstanceOf(NoSuchElementException.class)
+                .hasMessage("Карта с id 1 не найдена");
+    }
+    
+// Если id - null
 //    @Test
-//    void deleteCardById_ShouldDeleteCard_WhenCardExists() {
-//        // Given: Мокаем, что карта найдена
-//        when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+//    void deleteCardById_ShouldNotInteractWithRepository_WhenInvalidId() {
+//        // Given: Null ID (edge case)
+//        // When & Then: Exception, но репозиторий не вызван
+//        assertThatThrownBy(() -> cardService.deleteCardById(null))
+//                .isInstanceOf(IllegalArgumentException.class) // Или ваша custom exception
+//                .hasMessageContaining("ID cannot be null");
 //
-//        // When: Вызов метода сервиса
-//        cardService.deleteCardById(1L);
-//
-//        // Then: Проверяем, что delete вызван
-//        verify(cardRepository).delete(card);
-//        verify(cardRepository, never()).delete(any(Card.class)); // Только для этой карты
-//        verifyNoMoreInteractions(cardRepository); // Нет лишних вызовов
+//        verifyNoInteractions(cardRepository); // Репо не тронуто
 //    }
 
 }
