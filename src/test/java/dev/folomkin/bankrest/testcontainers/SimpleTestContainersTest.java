@@ -3,6 +3,7 @@ package dev.folomkin.bankrest.testcontainers;
 
 import dev.folomkin.bankrest.demo_testcontiners.entity.SimpleEntity;
 import dev.folomkin.bankrest.demo_testcontiners.repository.SimpleRepository;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -42,7 +43,11 @@ public class SimpleTestContainersTest {
     @Autowired
     private SimpleRepository repository;
 
-
+    @AfterAll
+    static void afterAll() {
+        // postgres.stop(); // Закомментируйте, чтобы не останавливать
+        // Но remove() всё равно может сработать — лучше env var
+    }
 
     @Test
     void debugConnection() {

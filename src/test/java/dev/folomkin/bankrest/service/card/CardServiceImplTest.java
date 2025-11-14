@@ -88,7 +88,8 @@ class CardServiceImplTest {
                 LocalDate.now(),
                 CardStatus.ACTIVE,
                 BigDecimal.valueOf(123.4),
-                userResponse);
+                userResponse
+        );
 
         when(cardSaveServiceUtil.saveCard(request, user)).thenReturn(expectedResponse);
 
