@@ -1,18 +1,23 @@
 package dev.folomkin.bankrest.service.security;
 
 
+import dev.folomkin.bankrest.domain.model.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class JwtService {
@@ -21,21 +26,29 @@ public class JwtService {
     private String SECRET;
     private static final long EXPIRATION_MS = 1000 * 60 * 60 * 24; // 1 сутки
 
-//    private Key getSigningKey() {
-//        return Keys.hmacShaKeyFor(SECRET.getBytes());
-//    }
-
     public String generateToken(UserDetails userDetails) {
-        return generateToken(Map.of(), userDetails);
+        String username = userDetails.getUsername();
+
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .map(role ->
+                        role.replace("ROLE_", ""))
+                .toList();
+
+        return generateToken(username, roles);
     }
 
-    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+    public String generateToken(String username, List<String> roles) {
+
         Date now = new Date();
         Date expiry = new Date(now.getTime() + EXPIRATION_MS);
 
+        Map<String, Object> map = new HashMap<>();
+        map.put("roles", roles);
+
         JwtBuilder builder = Jwts.builder()
-                .claims(extraClaims)
-                .subject(userDetails.getUsername())
+                .subject(username)
+                .claims(map)
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(Keys.hmacShaKeyFor(SECRET.getBytes()));

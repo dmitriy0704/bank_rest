@@ -65,10 +65,10 @@ public class JwtTokenProvider {
 
         return Jwts.builder()
 
-                .setClaims(claims) // Передаём готовые claims в builder
+                .claims(claims) // Передаём готовые claims в builder
                 .subject(username)
-                .setIssuedAt(now)
-                .setExpiration(validity)
+                .issuedAt(now)
+                .expiration(validity)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -76,7 +76,7 @@ public class JwtTokenProvider {
     // Валидация токена (без изменений)
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            Jwts.parser().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (Exception e) {
             return false;
@@ -85,13 +85,13 @@ public class JwtTokenProvider {
 
     // Извлечение username (без изменений)
     public String getUsernameFromToken(String token) {
-        return Jwts.parserBuilder().setSigningKey(key).build()
+        return Jwts.parser().setSigningKey(key).build()
                 .parseClaimsJws(token).getBody().getSubject();
     }
 
     // Создание Authentication из токена (с фиксом для ролей)
     public Authentication getAuthentication(String token) {
-        Claims claims = Jwts.parserBuilder().setSigningKey(key).build()
+        Claims claims = Jwts.parser().setSigningKey(key).build()
                 .parseClaimsJws(token).getBody();
 
         List<String> roles = claims.get("roles", List.class);

@@ -55,7 +55,7 @@ public class CardControllerTestCntrs {
     private TestRestTemplate restTemplate;
 
     @Autowired
-    private JwtTokenProvider jwtTokenProvider; // ← Авто-инжект из контекста
+    private JwtService jwtService; // ← Авто-инжект из контекста
 
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17")
@@ -78,11 +78,11 @@ public class CardControllerTestCntrs {
 
 
     @Test
-    @WithMockUser(username = "testuser", roles = {"ADMIN"})
+    @WithMockUser(username = "John Doe", roles = {"ADMIN"})
     void shouldCreateAndGetCard() {
 
         // Given: Генерируем JWT-токен для user с ролью USER
-        String token = jwtTokenProvider.createToken("testuser", Arrays.asList("ROLE_ADMIN")); // Или ROLE_USER, в зависимости от вашего формата
+        String token = jwtService.generateToken("John Doe", Arrays.asList("ROLE_ADMIN")); // Или ROLE_USER, в зависимости от вашего формата
 
         // Headers с Bearer
         HttpHeaders headers = new HttpHeaders();
@@ -91,11 +91,13 @@ public class CardControllerTestCntrs {
 
         var user = new User();
         user.setId(1L);
-        user.setUsername("username");
+        user.setUsername("John Doe");
         user.setPassword("password");
         user.setEmail("email@email.com");
         user.setCreatedAt(LocalDateTime.now());
         user.setRole(Role.ROLE_USER);
+
+
 
         Card newCard = new Card(
                 1L,
