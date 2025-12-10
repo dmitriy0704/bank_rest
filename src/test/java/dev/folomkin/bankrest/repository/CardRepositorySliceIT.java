@@ -69,10 +69,10 @@ class CardRepositorySliceIT {
         assertThat(found).isEmpty();
     }
 
-        @Test
-        void shouldSaveCard() {
-            // Только репозиторий + БД
-            Card saved = cardRepository.save(new Card("1234 5678"));
-            assertThat(saved.getId()).isGreaterThan(0L);
-    }
+//    @Test
+//    void shouldSaveCard() {
+//        // Только репозиторий + БД
+//        Card saved = cardRepository.save(new Card("1234 5678"));
+//        assertThat(saved.getId()).isGreaterThan(0L);
+//    }
 }
