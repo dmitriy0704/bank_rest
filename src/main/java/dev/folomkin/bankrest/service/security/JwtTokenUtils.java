@@ -1,7 +1,6 @@
 package dev.folomkin.bankrest.service.security;
 
 
-import dev.folomkin.bankrest.domain.model.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.JwtParser;
@@ -17,10 +16,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
-public class JwtService {
+public class JwtTokenUtils {
 
     @Value("${token.signing.key}")
     private String SECRET;

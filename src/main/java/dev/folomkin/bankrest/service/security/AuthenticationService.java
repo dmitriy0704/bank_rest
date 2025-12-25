@@ -12,13 +12,11 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
-
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
     private final UserService userService;
-    private final JwtService jwtService;
+    private final JwtTokenUtils jwtTokenUtils;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
@@ -40,7 +38,7 @@ public class AuthenticationService {
         userService.create(user);
 
 
-        var jwt = jwtService.generateToken(user);
+        var jwt = jwtTokenUtils.generateToken(user);
         return new JwtAuthenticationResponse(jwt);
     }
 
@@ -60,7 +58,7 @@ public class AuthenticationService {
                 .userDetailsService()
                 .loadUserByUsername(request.getUsername());
 
-        var jwt = jwtService.generateToken(user);
+        var jwt = jwtTokenUtils.generateToken(user);
         return new JwtAuthenticationResponse(jwt);
     }
 }

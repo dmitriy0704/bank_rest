@@ -12,7 +12,7 @@ import dev.folomkin.bankrest.domain.model.User;
 import dev.folomkin.bankrest.repository.CardRepository;
 import dev.folomkin.bankrest.repository.UserRepository;
 import dev.folomkin.bankrest.service.card.CardService;
-import dev.folomkin.bankrest.service.security.JwtService;
+import dev.folomkin.bankrest.service.security.JwtTokenUtils;
 import dev.folomkin.bankrest.service.user.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -60,7 +60,7 @@ class CardControllerTest {
     private AuthenticationManager authenticationManager;
 
     @MockitoBean
-    private JwtService jwtService;
+    private JwtTokenUtils jwtTokenUtils;
 
     @MockitoBean
     UserRepository userRepository;

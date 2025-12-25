@@ -1,6 +1,6 @@
 package dev.folomkin.bankrest.config.security;
 
-import dev.folomkin.bankrest.service.security.JwtService;
+import dev.folomkin.bankrest.service.security.JwtTokenUtils;
 import dev.folomkin.bankrest.service.user.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -24,7 +24,7 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public static final String BEARER_PREFIX = "Bearer ";
     public static final String HEADER_NAME = "Authorization";
-    private final JwtService jwtService;
+    private final JwtTokenUtils jwtTokenUtils;
     private final UserService userService;
 
     @Override
@@ -43,7 +43,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Обрезаем префикс и получаем имя пользователя из токена
         var jwt = authHeader.substring(BEARER_PREFIX.length());
-        var username = jwtService.extractUsername(jwt);
+        var username = jwtTokenUtils.extractUsername(jwt);
 
         if (StringUtils.isNotEmpty(username) && SecurityContextHolder.getContext().getAuthentication() == null) {
 
@@ -51,7 +51,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         .userDetailsService()
                         .loadUserByUsername(username);
                 // Если токен валиден, то аутентифицируем пользователя
-                if (jwtService.isTokenValid(jwt, userDetails)) {
+                if (jwtTokenUtils.isTokenValid(jwt, userDetails)) {
                     SecurityContext context = SecurityContextHolder.createEmptyContext();
 
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(

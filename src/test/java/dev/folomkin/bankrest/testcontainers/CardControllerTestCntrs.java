@@ -3,12 +3,10 @@ package dev.folomkin.bankrest.testcontainers;
 
 import dev.folomkin.bankrest.domain.dto.card.CardRequest;
 import dev.folomkin.bankrest.domain.dto.card.CardResponse;
-import dev.folomkin.bankrest.domain.model.Card;
-import dev.folomkin.bankrest.domain.model.CardStatus;
 import dev.folomkin.bankrest.domain.model.Role;
 import dev.folomkin.bankrest.domain.model.User;
 import dev.folomkin.bankrest.repository.UserRepository;
-import dev.folomkin.bankrest.service.security.JwtService;
+import dev.folomkin.bankrest.service.security.JwtTokenUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -18,7 +16,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.*;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -30,7 +27,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -49,7 +45,7 @@ public class CardControllerTestCntrs {
     private TestRestTemplate restTemplate;
 
     @Autowired
-    private JwtService jwtService; // ← Авто-инжект из контекста
+    private JwtTokenUtils jwtTokenUtils; // ← Авто-инжект из контекста
 
     @Autowired
     private UserRepository userRepository;
@@ -88,7 +84,7 @@ public class CardControllerTestCntrs {
         log.info("Сохранился пользователь с Id {}", user.getId());
 
         // Given: Генерируем JWT-токен для user с ролью USER
-        String token = jwtService.generateToken("John Doe", List.of("ROLE_ADMIN")); // Или ROLE_USER, в зависимости от вашего формата
+        String token = jwtTokenUtils.generateToken("John Doe", List.of("ROLE_ADMIN")); // Или ROLE_USER, в зависимости от вашего формата
 
         // Headers с Bearer
         HttpHeaders headers = new HttpHeaders();
