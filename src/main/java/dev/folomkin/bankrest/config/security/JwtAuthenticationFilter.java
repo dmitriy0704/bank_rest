@@ -70,3 +70,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 }
+
+//@Component
+//public class JwtAuthenticationFilter extends OncePerRequestFilter {
+//    private final JwtParser jwtParser;  // Инжектируй или создай в конструкторе
+//
+//    public JwtAuthenticationFilter(String secret) {
+//        SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+//        this.jwtParser = Jwts.parser().verifyWith(key).build();
+//    }
+//
+//    @Override
+//    protected void doFilterInternal(HttpServletRequest request, ...) {
+//        String token = extractTokenFromHeader(request);  // Твоя логика извлечения
+//        if (token != null) {
+//            try {
+//                Jws<Claims> jws = jwtParser.parseSignedClaims(token);
+//                String username = jws.getBody().getSubject();
+//                // Создай Authentication и SecurityContext
+//                // ...
+//            } catch (JwtException e) {
+//                // Логируй и игнорируй
+//            }
+//        }
+//        filterChain.doFilter(request, response);
+//    }
+//}
