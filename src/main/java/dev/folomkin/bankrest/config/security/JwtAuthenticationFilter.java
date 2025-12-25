@@ -85,10 +85,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 //        String token = extractTokenFromHeader(request);  // Твоя логика извлечения
 //        if (token != null) {
 //            try {
-//                Jws<Claims> jws = jwtParser.parseSignedClaims(token);
-//                String username = jws.getBody().getSubject();
-//                // Создай Authentication и SecurityContext
-//                // ...
+//
+//Jws<Claims> jws = jwtParser.parseSignedClaims(token);
+//String username = jws.getBody().getSubject();
+//List<GrantedAuthority> authorities = jws.getBody().get("roles", List.class)
+//        .stream().map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+//        .collect(Collectors.toList());
+//Authentication auth = new UsernamePasswordAuthenticationToken(username, null, authorities);
+//SecurityContextHolder.getContext().setAuthentication(auth);
 //            } catch (JwtException e) {
 //                // Логируй и игнорируй
 //            }
