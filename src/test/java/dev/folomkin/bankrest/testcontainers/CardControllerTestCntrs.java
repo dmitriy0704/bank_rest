@@ -6,7 +6,7 @@ import dev.folomkin.bankrest.domain.dto.card.CardResponse;
 import dev.folomkin.bankrest.domain.model.Role;
 import dev.folomkin.bankrest.domain.model.User;
 import dev.folomkin.bankrest.repository.UserRepository;
-import dev.folomkin.bankrest.service.security.JwtTokenUtils;
+import dev.folomkin.bankrest.utils.JwtTokenUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

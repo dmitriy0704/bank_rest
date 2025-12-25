@@ -6,6 +6,7 @@ import dev.folomkin.bankrest.domain.dto.security.SignUpRequest;
 import dev.folomkin.bankrest.domain.model.Role;
 import dev.folomkin.bankrest.domain.model.User;
 import dev.folomkin.bankrest.service.user.UserService;
+import dev.folomkin.bankrest.utils.JwtTokenUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

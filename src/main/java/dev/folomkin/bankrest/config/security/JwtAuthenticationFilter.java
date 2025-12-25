@@ -1,6 +1,6 @@
 package dev.folomkin.bankrest.config.security;
 
-import dev.folomkin.bankrest.service.security.JwtTokenUtils;
+import dev.folomkin.bankrest.utils.JwtTokenUtils;
 import dev.folomkin.bankrest.service.user.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
