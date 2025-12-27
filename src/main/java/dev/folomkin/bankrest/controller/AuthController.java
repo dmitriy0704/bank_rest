@@ -1,14 +1,16 @@
 package dev.folomkin.bankrest.controller;
 
-import dev.folomkin.bankrest.domain.dto.security.JwtAuthenticationResponse;
-import dev.folomkin.bankrest.domain.dto.security.SignInRequest;
-import dev.folomkin.bankrest.domain.dto.security.SignUpRequest;
-import dev.folomkin.bankrest.service.security.AuthenticationService;
+import dev.folomkin.bankrest.domain.dto.security.JwtResponse;
+import dev.folomkin.bankrest.domain.dto.security.LoginRequest;
+import dev.folomkin.bankrest.domain.dto.user.UserRequest;
+import dev.folomkin.bankrest.domain.dto.user.UserResponse;
+import dev.folomkin.bankrest.service.security.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
@@ -21,24 +23,23 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Tag(name = "Аутентификация")
 public class AuthController {
-    private final AuthenticationService authenticationService;
+    private final AuthService authService;
 
     @Operation(summary = "Регистрация пользователя")
-    @PostMapping("/sign-up")
-    public JwtAuthenticationResponse signUp(@RequestBody @Valid SignUpRequest request) {
-        return authenticationService.signUp(request);
+    @PostMapping("/register")
+    public UserResponse register (@RequestBody @Valid UserRequest request) {
+        return authService.register(request);
     }
 
     @Operation(summary = "Авторизация пользователя")
-    @PostMapping("/sign-in")
-    public JwtAuthenticationResponse signIn(@RequestBody @Valid SignInRequest request) {
-        return authenticationService.signIn(request);
+    @PostMapping("/login")
+    public JwtResponse login(@RequestBody @Valid LoginRequest request) {
+        return authService.login(request);
     }
-
 
     /**
      * Используется для детализации ошибок полей DTO
-    * */
+     */
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public Map<String, String> handleValidationExceptions(

@@ -7,22 +7,31 @@ import dev.folomkin.bankrest.domain.model.User;
 import dev.folomkin.bankrest.exceptions.AuthExistUserException;
 import dev.folomkin.bankrest.exceptions.NoSuchElementException;
 import dev.folomkin.bankrest.repository.UserRepository;
+import dev.folomkin.bankrest.service.RoleService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl implements UserService, UserDetailsService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final RoleService roleService;
+
 
 
     /**
@@ -97,15 +106,16 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new NoSuchElementException("Пользователь не найден"));
     }
 
-    /**
-     * Получение пользователя по имени пользователя
-     * <p>
-     * Нужен для Spring Security
-     *
-     * @return пользователь
-     */
-    public UserDetailsService userDetailsService() {
-        return this::getByUsername;
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = getByUsername(username);
+        return new org.springframework.security.core.userdetails.User(
+                user.getUsername(),
+                user.getPassword(),
+                true, true, true, true, // accountNonExpired, credentialsNonExpired, accountNonLocked
+                user.getRoles().stream().map(role -> new SimpleGrantedAuthority(role.getName())).collect(Collectors.toList())
+        );
     }
 
     /**
@@ -126,7 +136,7 @@ public class UserServiceImpl implements UserService {
      */
     public void getAdmin() {
         var user = getCurrentUser();
-        user.setRole(Role.ROLE_ADMIN);
+        user.setRoles(List.of(roleService.getUserRole()));
         save(user);
     }
 
@@ -138,7 +148,7 @@ public class UserServiceImpl implements UserService {
      */
     public void getUser() {
         var user = getCurrentUser();
-        user.setRole(Role.ROLE_USER);
+        user.setRoles(List.of(roleService.getUserRole()));
         save(user);
     }
 

@@ -1,4 +1,4 @@
-package dev.folomkin.bankrest.domain.dto.security;
+package dev.folomkin.bankrest.domain.dto.user;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Schema(description = "Запрос на регистрацию")
-public class SignUpRequest {
+public class UserRequest {
 
     @Schema(description = "Имя пользователя", example = "John Doe")
     @Size(min = 5, max = 50, message = "Имя пользователя должно содержать от 5 до 50 символов")

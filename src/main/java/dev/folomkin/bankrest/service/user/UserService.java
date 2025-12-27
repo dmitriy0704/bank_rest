@@ -18,8 +18,6 @@ public interface UserService {
 
     User create(User user);
 
-    UserDetailsService userDetailsService();
-
     void getAdmin();
 
     void getUser();

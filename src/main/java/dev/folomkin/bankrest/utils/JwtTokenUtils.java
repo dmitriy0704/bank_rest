@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-@Service
 public class JwtTokenUtils {
 
     @Value("${token.signing.key}")
@@ -69,26 +68,6 @@ public class JwtTokenUtils {
         return parser.parseSignedClaims(token).getPayload();
     }
 
-
-// => Новая версия
-//    public Claims getAllClaimsFromToken(String token) {
-//        // Создаем SecretKey из секрета (для HS256)
-//        SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-//
-//        // Строим парсер
-//        JwtParser parser = Jwts.parser()
-//                .verifyWith(key)  // Верификация подписи (для JWS)
-//                .build();
-//
-//        try {
-//            // Парсим как signed JWT (JWS)
-//            Jws<Claims> jws = parser.parseSignedClaims(token);
-//            return jws.getBody();  // Возвращаем claims (body)
-//        } catch (JwtException e) {
-//            // Обработка ошибок: неверный токен, истекший, подделка и т.д.
-//            throw new IllegalArgumentException("Invalid JWT token: " + e.getMessage());
-//        }
-//    }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);

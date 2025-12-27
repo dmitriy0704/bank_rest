@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
-      id: 1-create-user-table
-      author: dmitriy
+      id: create-user-table
+      author: Dmitriy Folomkin
       changes:
         - createTable:
             tableName: users
@@ -41,9 +41,92 @@ databaseChangeLog:
                   type: VARCHAR(255)
                   constraints:
                     nullable: false
+  - changeSet:
+      id: create-table-roles
+      author: Dmitriy Folomkin
+      changes:
+        - createTable:
+            tableName: roles
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+                    unique: true
+  - changeSet:
+      id: create-table-user_roles
+      author: your-name
+      changes:
+        - createTable:
+            tableName: user_roles
+            columns:
+              - column:
+                  name: user_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+            constraints:
+              primaryKey:
+                primaryKeyName: pk_user_roles
+                columns: user_id, role_id
 
   - changeSet:
-      id: 2-create-card-table
+      id: add-foreign-key-user_id-to-users
+      author: your-name
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: user_roles
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_user_roles_user_id
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+
+        - changeSet:
+            id: add-foreign-key-role_id-to-roles
+            author: your-name
+            changes:
+              - addForeignKeyConstraint:
+                  baseTableName: user_roles
+                  baseColumnNames: role_id
+                  referencedTableName: roles
+                  referencedColumnNames: id
+                  constraintName: fk_user_roles_role_id
+                  onDelete: CASCADE
+                  onUpdate: RESTRICT
+
+  - changeSet:
+      id: insert-default-roles
+      author: your-name
+      changes:
+        - insert:
+            tableName: roles
+            columns:
+              - column:
+                  name: name
+                  value: ROLE_USER
+        - insert:
+            tableName: roles
+            columns:
+              - column:
+                  name: name
+                  value: ROLE_ADMIN
+  - changeSet:
+      id: create-card-table
       author: dmitriy
       changes:
         - createTable:

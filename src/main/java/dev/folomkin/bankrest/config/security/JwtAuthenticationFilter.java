@@ -1,102 +1,97 @@
 package dev.folomkin.bankrest.config.security;
 
-import dev.folomkin.bankrest.utils.JwtTokenUtils;
-import dev.folomkin.bankrest.service.user.UserService;
+
+import dev.folomkin.bankrest.config.JwtTokenProvider;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.JwtParser;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
-@Component
-@RequiredArgsConstructor
+
+/**
+ * Фильтр, который перехватывает каждый запрос и проверяет наличие валидного JWT-токена
+ * в заголовке Authorization: Bearer <token>.
+ * Если токен валиден — автоматически аутентифицирует пользователя в Spring Security.
+ */
+@Component // Бин Spring, чтобы можно было инжектить в SecurityConfig
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    public static final String BEARER_PREFIX = "Bearer ";
-    public static final String HEADER_NAME = "Authorization";
-    private final JwtTokenUtils jwtTokenUtils;
-    private final UserService userService;
+
+    private final JwtTokenProvider jwtTokenProvider;
+
+    // Инжектируем провайдер через конструктор (рекомендуемый способ в Spring)
+    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider) {
+        this.jwtTokenProvider = jwtTokenProvider;
+    }
 
     @Override
-    protected void doFilterInternal(
-            @NonNull HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain
-    ) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
 
-        // Получаем токен из заголовка
-        var authHeader = request.getHeader(HEADER_NAME);
-        if (StringUtils.isEmpty(authHeader) || !StringUtils.startsWith(authHeader, BEARER_PREFIX)) {
+        // Получаем заголовок Authorization
+        String header = request.getHeader("Authorization");
+
+        // Если заголовка нет или он не начинается с "Bearer " — пропускаем (анонимный доступ)
+        if (header == null || !header.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Обрезаем префикс и получаем имя пользователя из токена
-        var jwt = authHeader.substring(BEARER_PREFIX.length());
-        var username = jwtTokenUtils.extractUsername(jwt);
+        // Обрезаем префикс "Bearer ", получаем чистый токен
+        String token = header.substring(7);
 
-        if (StringUtils.isNotEmpty(username) && SecurityContextHolder.getContext().getAuthentication() == null) {
+        try {
+            // Парсим токен с проверкой подписи (используем готовый парсер из провайдера)
+            Jws<Claims> jws = jwtTokenProvider.getJwtParser().parseSignedClaims(token);
+            Claims claims = jws.getPayload();
 
-                UserDetails userDetails = userService
-                        .userDetailsService()
-                        .loadUserByUsername(username);
-                // Если токен валиден, то аутентифицируем пользователя
-                if (jwtTokenUtils.isTokenValid(jwt, userDetails)) {
-                    SecurityContext context = SecurityContextHolder.createEmptyContext();
+            String username = claims.getSubject();
 
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
+            // Если username есть и пользователь ещё не аутентифицирован в этом запросе
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    context.setAuthentication(authToken);
-                    SecurityContextHolder.setContext(context);
-                }
+                // Извлекаем список ролей из claims (мы сохраняли их как List<String>)
+                @SuppressWarnings("unchecked")
+                List<String> roles = claims.get("roles", List.class);
 
+                // Преобразуем роли в GrantedAuthority (Spring ожидает префикс ROLE_)
+                var authorities = roles.stream()
+                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                        .toList();
 
+                // Создаём объект аутентификации (principal = username, credentials = null, authorities)
+                var authentication = new UsernamePasswordAuthenticationToken(
+                        username, null, authorities);
+
+                // Добавляем детали запроса (IP, sessionId и т.д.) — полезно для аудита
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                // Устанавливаем аутентификацию в SecurityContext — теперь Spring считает пользователя авторизованным
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+
+        } catch (Exception e) {
+            // Любая ошибка при парсинге токена (истёк, подделан, неверный формат) — считаем пользователя анонимным
+            // Здесь можно добавить логирование: logger.warn("Невалидный JWT: {}", e.getMessage());
         }
+
+        // В любом случае передаём управление следующему фильтру в цепочке
         filterChain.doFilter(request, response);
     }
-}
 
-//@Component
-//public class JwtAuthenticationFilter extends OncePerRequestFilter {
-//    private final JwtParser jwtParser;  // Инжектируй или создай в конструкторе
-//
-//    public JwtAuthenticationFilter(String secret) {
-//        SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-//        this.jwtParser = Jwts.parser().verifyWith(key).build();
-//    }
-//
-//    @Override
-//    protected void doFilterInternal(HttpServletRequest request, ...) {
-//        String token = extractTokenFromHeader(request);  // Твоя логика извлечения
-//        if (token != null) {
-//            try {
-//
-//Jws<Claims> jws = jwtParser.parseSignedClaims(token);
-//String username = jws.getBody().getSubject();
-//List<GrantedAuthority> authorities = jws.getBody().get("roles", List.class)
-//        .stream().map(role -> new SimpleGrantedAuthority("ROLE_" + role))
-//        .collect(Collectors.toList());
-//Authentication auth = new UsernamePasswordAuthenticationToken(username, null, authorities);
-//SecurityContextHolder.getContext().setAuthentication(auth);
-//            } catch (JwtException e) {
-//                // Логируй и игнорируй
-//            }
-//        }
-//        filterChain.doFilter(request, response);
-//    }
-//}
+
+}
